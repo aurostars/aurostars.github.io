@@ -21,10 +21,10 @@ export default function Home() {
               <div>
                 <p className="text-sm font-medium text-blue-400 mb-3">👋 你好，我是</p>
                 <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
-                  <span className="hero-gradient-text">董星</span>
+                  <span className="hero-gradient-text">Xing Dong</span>
                 </h1>
                 <p className="mt-1 text-2xl font-light text-slate-400">AI 产品经理</p>
-                <p className="mt-3 text-sm text-slate-500">北京师范大学 · 理论经济学硕士 · 数据驱动 · AI赋能产品</p>
+                <p className="mt-3 text-sm text-slate-500">北京师范大学 理论经济学硕士 · 中国人民大学 应用经济学学士</p>
               </div>
             </div>
           </Animate>
@@ -32,7 +32,7 @@ export default function Home() {
           <Animate delay={200}>
             <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {[
-                { value: "4+", label: "段实习经历" },
+                { value: "5+", label: "段实习经历" },
                 { value: "4000+", label: "月产出报告" },
                 { value: "90%+", label: "人机一致率" },
                 { value: "80%+", label: "效率提升" },
@@ -164,6 +164,17 @@ export default function Home() {
                 "完成互联网、餐饮等行业10+核心职位知识库建设",
                 "输出产品优化方案并主导上线，各职位匹配成功率提升30%+",
                 "搭建20+职位指标监控看板，数据驱动方案迭代",
+              ],
+            },
+            {
+              date: "2023.03 - 2023.06",
+              company: "太平洋证券研究所",
+              role: "行业研究",
+              color: "bg-amber-500",
+              highlights: [
+                "运用Wind、iFinD等数据库收集与整合目标行业及公司基本面数据",
+                "深度参与撰写3篇公司和行业深度报告，独立完成财务表现、业务与竞争分析等部分",
+                "独立撰写8篇行业周报，持续跟踪市场动态",
               ],
             },
           ].map((item, i) => (
