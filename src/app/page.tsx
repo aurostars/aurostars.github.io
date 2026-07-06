@@ -13,7 +13,7 @@ export default function Home() {
           <Animate>
             <div className="flex flex-col items-start gap-8 sm:flex-row sm:items-center">
               <div className="relative shrink-0">
-                <div className="absolute -inset-1.5 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 avatar-glow"></div>
+                <div className="absolute -inset-1.5 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-blue-400 avatar-glow"></div>
                 <div className="relative h-[130px] w-[130px] rounded-full border-2 border-slate-800 shadow-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
                   <span className="text-5xl font-bold text-white">董</span>
                 </div>
