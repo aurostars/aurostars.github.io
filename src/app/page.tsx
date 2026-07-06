@@ -21,9 +21,9 @@ export default function Home() {
               <div>
                 <p className="text-sm font-medium text-blue-400 mb-3">👋 你好，我是</p>
                 <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
-                  <span className="hero-gradient-text">Xing Dong</span>
+                  <span className="hero-gradient-text">董星</span>
                 </h1>
-                <p className="mt-1 text-2xl font-light text-slate-400">AI 产品经理</p>
+                <p className="mt-1 text-2xl font-light text-slate-400">Xing Dong</p>
                 <p className="mt-3 text-sm text-slate-500">北京师范大学 理论经济学硕士 · 中国人民大学 应用经济学学士</p>
               </div>
             </div>

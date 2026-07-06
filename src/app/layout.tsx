@@ -8,8 +8,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Aurostars — Developer",
-  description: "Aurostars 的个人主页",
+  title: "董星 — AI 产品经理",
+  description: "董星的个人主页",
 };
 
 export default function RootLayout({
@@ -23,7 +23,7 @@ export default function RootLayout({
         <header className="sticky top-0 z-50 glass-strong">
           <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
             <a className="hero-gradient-text text-lg font-bold tracking-tight" href="/">
-              Aurostars
+              董星
             </a>
             <ul className="flex gap-1">
               <li>
@@ -54,7 +54,7 @@ export default function RootLayout({
         </main>
         <footer className="mt-10 border-t border-white/5">
           <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-6 py-10 text-sm text-slate-500 sm:flex-row sm:justify-between">
-            <p>&copy; 2026 Aurostars. All rights reserved.</p>
+            <p>&copy; 2026 董星. All rights reserved.</p>
             <div className="flex items-center gap-5">
               <a href="https://github.com/aurostars" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-blue-400">GitHub</a>
               <a href="mailto:3056728260@qq.com" className="transition-colors hover:text-blue-400">邮箱</a>
