@@ -100,4 +100,30 @@ describe("home page", () => {
     expect(article.getByText(/JOYCEQL\/magic-resume/)).toBeInTheDocument();
     expect(article.getByText(/个人修改范围/)).toBeInTheDocument();
   });
+
+  it("renders five concise experience rows", () => {
+    render(<Home />);
+    const section = screen.getByRole("region", { name: "经历" });
+    expect(section.querySelectorAll("[data-experience-row]")).toHaveLength(5);
+    expect(section.textContent).not.toContain("产品设计：");
+  });
+
+  it("renders education and capabilities after experience", () => {
+    render(<Home />);
+    const experience = screen.getByRole("region", { name: "经历" });
+    const education = screen.getByRole("region", { name: "教育与能力" });
+    expect(experience.compareDocumentPosition(education) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(education).getByText("北京师范大学 理论经济学硕士")).toBeInTheDocument();
+    expect(within(education).getByText("AI 产品设计")).toBeInTheDocument();
+  });
+
+  it("limits contact to email and GitHub", () => {
+    render(<Home />);
+    const section = screen.getByRole("region", { name: "联系" });
+    expect(section.querySelectorAll("a")).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "发送邮件" })).toHaveAttribute("href", "mailto:dongxing.123@bytedance.com");
+    expect(screen.getByRole("link", { name: "访问 GitHub" })).toHaveAttribute("href", "https://github.com/aurostars");
+    expect(section.querySelector("form")).not.toBeInTheDocument();
+    expect(section.textContent).not.toMatch(/电话|微信|微博|LinkedIn/);
+  });
 });
