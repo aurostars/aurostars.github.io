@@ -79,3 +79,36 @@ Tests       5 passed (5)
 
 - Subject：`assets: add verified project media`
 - SHA：本报告与媒体位于同一提交中；最终不可自引用 SHA 以 `git rev-parse HEAD` 和任务交付消息为准。
+
+## Task 2 审查修复（2026-09-11）
+
+### TDD RED → GREEN
+
+先加强 `src/content/portfolio.test.ts`，以 13 个字面量路径锁定批准资产集合，并直接读取 PNG 文件验证：8 字节 PNG 签名、首个 `IHDR` chunk、文件大于 1KB，以及 IHDR 宽高与 `ProjectMedia.width/height` 一致。
+
+修复数据前执行目标测试，得到预期 RED：
+
+```text
+Test Files  1 failed (1)
+Tests       1 failed | 4 passed (5)
+expected [ …(12) ] to deeply equal [ …(13) ]
+- "/projects/job-application-helper/icon.png"
+```
+
+随后仅修复内容数据：将真实的 `icon.png` 作为 Job Application Helper 的 `ProjectMedia`（128×128，描述为浏览器扩展图标）加入，并按各文件 IHDR 校正 13 项媒体元数据。未重采样或修改 PNG。
+
+修复后目标测试：
+
+```text
+Test Files  1 passed (1)
+Tests       5 passed (5)
+```
+
+### 四个直接复制资源 SHA-256 对照
+
+| Source | Target | Source SHA-256 | Target SHA-256 |
+| --- | --- | --- | --- |
+| `case-job-application-helper/public/icons/icon128.png` | `public/projects/job-application-helper/icon.png` | `5b7ee669470d6b60ae3e1735894d2cf4e0042eecbdc375ea52912078e9188084` | `5b7ee669470d6b60ae3e1735894d2cf4e0042eecbdc375ea52912078e9188084` |
+| `case-resume-builder/public/web-shot.png` | `public/projects/resume-builder/workspace.png` | `174796a4e2d2afaff73fdfe17ee994b37754d248f44a5e5af7cdbc0552502169` | `174796a4e2d2afaff73fdfe17ee994b37754d248f44a5e5af7cdbc0552502169` |
+| `case-resume-builder/public/template-snapshots/zh/modern.png` | `public/projects/resume-builder/modern-template.png` | `9160d832c225d1ae15e0deb1f7aeaf065a47b5eb63d0dc1c7b5525a4ee2e82f1` | `9160d832c225d1ae15e0deb1f7aeaf065a47b5eb63d0dc1c7b5525a4ee2e82f1` |
+| `case-resume-builder/public/features/polish.png` | `public/projects/resume-builder/polish.png` | `bd9874028cbcdb88b654c90d4ed3d4a05bc8374bd237e8d8e24dbfcf16021d31` | `bd9874028cbcdb88b654c90d4ed3d4a05bc8374bd237e8d8e24dbfcf16021d31` |

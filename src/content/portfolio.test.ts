@@ -1,4 +1,4 @@
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { contact, experiences, portfolioCases } from "./portfolio";
@@ -19,6 +19,24 @@ const expectedRepositoryUrls = {
 
 const expectedResumeBuilderProvenance =
   "基于 https://github.com/JOYCEQL/magic-resume 二次开发；当前仓库 README 明确列出的个人修改范围：扩展 API 提供商、增加主题色预设与模板、增加简历快速生成、JD 定制优化、STAR 法则改写、中英简历互译和多格式导出。";
+
+const approvedMediaPaths = [
+  "/projects/interview-review/analysis.png",
+  "/projects/interview-review/patterns.png",
+  "/projects/interview-review/upload.png",
+  "/projects/job-application-helper/application-records.png",
+  "/projects/job-application-helper/icon.png",
+  "/projects/job-application-helper/profile-manager.png",
+  "/projects/job-application-helper/visual-fill.png",
+  "/projects/meeting-minutes/input.png",
+  "/projects/meeting-minutes/pipeline.png",
+  "/projects/meeting-minutes/review.png",
+  "/projects/resume-builder/modern-template.png",
+  "/projects/resume-builder/polish.png",
+  "/projects/resume-builder/workspace.png",
+];
+
+const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 const expectedExperiences = [
   { period: "2026.03 - 2026.07", organization: "科大讯飞", role: "AI产品经理", highlight: "多模态心脏超声智能报告系统" },
@@ -46,14 +64,24 @@ describe("portfolio content", () => {
     }
   });
 
-  it("backs every declared media item with a non-placeholder public asset", () => {
-    for (const item of portfolioCases) {
-      for (const media of item.media) {
-        const assetPath = join(process.cwd(), "public", media.src.replace(/^\//, ""));
+  it("locks approved PNG media to real files and accurate IHDR dimensions", () => {
+    const mediaItems = portfolioCases.flatMap((item) => item.media);
 
-        expect(existsSync(assetPath), `${media.src} should exist under public`).toBe(true);
-        expect(statSync(assetPath).size, `${media.src} should be larger than 1KB`).toBeGreaterThan(1024);
-      }
+    expect(mediaItems.map((media) => media.src).sort()).toEqual(approvedMediaPaths);
+
+    for (const media of mediaItems) {
+      const assetPath = join(process.cwd(), "public", media.src.replace(/^\//, ""));
+
+      expect(existsSync(assetPath), `${media.src} should exist under public`).toBe(true);
+      expect(statSync(assetPath).size, `${media.src} should be larger than 1KB`).toBeGreaterThan(1024);
+
+      const png = readFileSync(assetPath);
+      expect(png.subarray(0, 8), `${media.src} should have a PNG signature`).toEqual(pngSignature);
+      expect(png.subarray(12, 16).toString("ascii"), `${media.src} should start with an IHDR chunk`).toBe("IHDR");
+      expect(
+        { width: media.width, height: media.height },
+        `${media.src} metadata should match its IHDR dimensions`,
+      ).toEqual({ width: png.readUInt32BE(16), height: png.readUInt32BE(20) });
     }
   });
 
