@@ -42,6 +42,13 @@ DONE
 - `git diff --check`：通过。
 - 旧动画组件及 `Animate`、`fade-up`、`fade-left`、`fade-scale` 残余检查：通过。
 
+## 首帧闪烁修复
+
+最终分支审查发现普通 `useEffect` 在浏览器绘制后才把可增强场景切换为等待状态，存在先显示后隐藏的首帧闪烁风险。独立修复采用客户端 `useLayoutEffect`，并在布局阶段同步更新真实 DOM 的 `data-visible` 后同步 React 状态，使隐藏等待状态在后续布局 effect 和首次绘制前就绪。服务端与 hydration 初始值仍为 `true`，因此 SSR、无 JS 默认可见及 hydration 标记一致性保持不变；不支持 IntersectionObserver 或启用 reduced motion 时不会隐藏。
+
+新增布局时序回归测试，验证后续布局 effect 读取 Reveal 时已经进入隐藏等待状态；原有 IntersectionObserver、延迟上限、reduced motion、缺失 API 和 cleanup 测试继续通过。修复后 Reveal focused tests 为 6/6，当前分支全量测试为 23/23。
+
 ## 提交
 
-提交信息：`feat: add accessible content reveals`
+- Task 7：`feat: add accessible content reveals`
+- 首帧闪烁独立修复：`fix: prevent reveal first-frame flash`

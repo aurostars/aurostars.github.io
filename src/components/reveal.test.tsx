@@ -1,3 +1,4 @@
+import { useLayoutEffect } from "react";
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Reveal } from "./reveal";
@@ -50,6 +51,30 @@ function mockIntersectionObserver() {
 }
 
 describe("Reveal", () => {
+  it("enters its hidden waiting state before sibling layout effects run", () => {
+    mockMotionPreference();
+    mockIntersectionObserver();
+    let visibleDuringLayout = "unread";
+
+    function LayoutProbe() {
+      useLayoutEffect(() => {
+        visibleDuringLayout = document.querySelector(".layout-timing-probe")?.getAttribute("data-visible") ?? "missing";
+      }, []);
+      return null;
+    }
+
+    render(
+      <>
+        <Reveal className="layout-timing-probe">
+          <span data-reveal-probe>首帧内容</span>
+        </Reveal>
+        <LayoutProbe />
+      </>,
+    );
+
+    expect(visibleDuringLayout).toBe("false");
+  });
+
   it("becomes visible when intersecting and disconnects", () => {
     vi.useFakeTimers();
     mockMotionPreference();
