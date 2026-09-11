@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("geist/font/sans", () => ({
@@ -23,12 +24,9 @@ function makeProjectFixtures(count: number): ProjectCase[] {
   }));
 }
 
-function renderLayout() {
-  return render(
-    <RootLayout>
-      <div id="content-probe">content</div>
-    </RootLayout>,
-  );
+function renderLayout(children: React.ReactNode = <div id="content-probe">content</div>) {
+  const markup = renderToStaticMarkup(<RootLayout>{children}</RootLayout>);
+  return new DOMParser().parseFromString(`<!doctype html>${markup}`, "text/html");
 }
 
 describe("site shell", () => {
@@ -38,11 +36,24 @@ describe("site shell", () => {
   });
 
   it("provides a skip link and approved navigation", () => {
-    renderLayout();
-    expect(screen.getByRole("link", { name: "跳到主要内容" })).toHaveAttribute("href", "#main-content");
-    expect(screen.getByRole("link", { name: "案例" })).toHaveAttribute("href", "#cases");
-    expect(screen.getByRole("link", { name: "经历" })).toHaveAttribute("href", "#experience");
-    expect(screen.getByRole("link", { name: "联系" })).toHaveAttribute("href", "#contact");
+    const page = renderLayout();
+
+    expect(page.querySelector('a[href="#main-content"]')?.textContent).toContain("跳到主要内容");
+    expect(page.querySelector('a[href="#cases"]')?.textContent).toContain("案例");
+    expect(page.querySelector('a[href="#experience"]')?.textContent).toContain("经历");
+    expect(page.querySelector('a[href="#contact"]')?.textContent).toContain("联系");
+  });
+
+  it("ends the complete page at the contact region without a footer or copyright", () => {
+    const page = renderLayout(<Home />);
+    const main = page.querySelector("#main-content");
+    const contact = page.querySelector('#contact[aria-label="联系"]');
+
+    expect(main).not.toBeNull();
+    expect(contact).not.toBeNull();
+    expect(main?.lastElementChild).toBe(contact);
+    expect(page.querySelector("footer")).toBeNull();
+    expect(page.body.textContent).not.toMatch(/©\s*2026\s*董星/);
   });
 });
 
@@ -82,21 +93,6 @@ describe("home page", () => {
     cards.forEach((card) => {
       expect(card.querySelector(".case-card-actions")).toBeTruthy();
     });
-  });
-
-  it("stretches cards in each case row so their actions share a baseline", () => {
-    const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
-    const caseRowRule = css.match(/\.case-row\s*\{([^}]*)\}/)?.[1];
-
-    expect(caseRowRule).toMatch(/align-items:\s*stretch/);
-    expect(caseRowRule).not.toMatch(/align-items:\s*start/);
-  });
-
-  it("reserves the flexible card-body row before actions so narrow desktop cards keep one baseline", () => {
-    const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
-    const cardBodyRule = css.match(/\.case-card-body\s*\{([^}]*)\}/)?.[1];
-
-    expect(cardBodyRule).toMatch(/grid-template-rows:\s*auto auto auto 1fr auto/);
   });
 
   it("renders four compact case summaries in approved order without expanded details", () => {

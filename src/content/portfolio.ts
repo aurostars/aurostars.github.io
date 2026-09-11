@@ -124,8 +124,6 @@ export const education = [
   "中国人民大学 应用经济学学士",
 ];
 
-export const capabilities = ["AI 产品设计", "数据分析", "用户研究", "模型评测", "项目管理"];
-
 export const contact = {
   email: "dongxing.123@bytedance.com",
   github: "https://github.com/aurostars",

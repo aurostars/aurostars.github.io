@@ -38,11 +38,6 @@ export default function RootLayout({
         </a>
         <SiteHeader />
         <main id="main-content">{children}</main>
-        <footer className="site-footer">
-          <div className="site-container footer-inner">
-            <p>© 2026 董星</p>
-          </div>
-        </footer>
       </body>
     </html>
   );

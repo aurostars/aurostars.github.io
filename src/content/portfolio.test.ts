@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import * as portfolio from "./portfolio";
 import { contact, experiences, portfolioCases } from "./portfolio";
 
 const expectedSlugs = [
@@ -47,6 +48,10 @@ const expectedExperiences = [
 ];
 
 describe("portfolio content", () => {
+  it("does not expose capabilities that no current page renders", () => {
+    expect(portfolio).not.toHaveProperty("capabilities");
+  });
+
   it("keeps the approved case order and exclusions", () => {
     expect(portfolioCases.map((item) => item.slug)).toEqual(expectedSlugs);
     expect(portfolioCases.map((item) => item.slug)).not.toContain("vedio-for-jiji");
