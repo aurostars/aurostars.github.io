@@ -6,6 +6,7 @@ vi.mock("next/font/google", () => ({
 }));
 
 import RootLayout, { metadata } from "@/app/layout";
+import Home from "@/app/page";
 
 function renderLayout() {
   return render(
@@ -27,5 +28,15 @@ describe("site shell", () => {
     expect(screen.getByRole("link", { name: "案例" })).toHaveAttribute("href", "#cases");
     expect(screen.getByRole("link", { name: "经历" })).toHaveAttribute("href", "#experience");
     expect(screen.getByRole("link", { name: "联系" })).toHaveAttribute("href", "#contact");
+  });
+});
+
+describe("home page", () => {
+  it("renders a concise recruiter-focused hero with one case CTA", () => {
+    render(<Home />);
+    expect(screen.getByRole("heading", { level: 1, name: "从问题定义，到结果验证。" })).toBeInTheDocument();
+    expect(screen.getByText("AI 产品经理")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "查看案例" })).toHaveAttribute("href", "#cases");
+    expect(screen.getAllByRole("link", { name: "查看案例" })).toHaveLength(1);
   });
 });
