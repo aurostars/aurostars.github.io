@@ -37,6 +37,13 @@ describe("site shell", () => {
 });
 
 describe("home page", () => {
+  it("renders the primary page content immediately without scroll reveal wrappers", () => {
+    const { container } = render(<Home />);
+    expect(container.querySelector(".reveal")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1 })).toBeVisible();
+    expect(screen.getByRole("region", { name: /代表案例/ })).toBeVisible();
+  });
+
   it("renders a concise recruiter-focused hero with one case CTA", () => {
     render(<Home />);
     expect(screen.getByRole("heading", { level: 1, name: "从问题定义，到结果验证。" })).toBeInTheDocument();
