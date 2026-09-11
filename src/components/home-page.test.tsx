@@ -130,6 +130,22 @@ describe("home page", () => {
     expect(cards[2].nextElementSibling).toBe(detail);
   });
 
+  it("groups experience, education, capabilities, and approved contact in one profile region", () => {
+    render(<Home />);
+    const profile = screen.getByRole("region", { name: "经历与能力" });
+    expect(within(profile).getAllByTestId("experience-row")).toHaveLength(5);
+    expect(within(profile).getByText("北京师范大学 理论经济学硕士")).toBeInTheDocument();
+    expect(within(profile).getByText("AI 产品设计")).toBeInTheDocument();
+    expect(within(profile).getAllByRole("link")).toHaveLength(2);
+    expect(profile.textContent).not.toMatch(/电话|微信|微博|LinkedIn/);
+  });
+
+  it("renders exactly one case card per project and no future placeholders", () => {
+    const { container } = render(<Home />);
+    expect(container.querySelectorAll(".case-card")).toHaveLength(4);
+    expect(screen.queryByText(/未来案例|待添加/)).not.toBeInTheDocument();
+  });
+
   it("renders five concise experience rows", () => {
     render(<Home />);
     const section = screen.getByRole("region", { name: "经历" });

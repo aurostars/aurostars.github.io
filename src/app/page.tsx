@@ -1,8 +1,6 @@
-import { Contact } from "@/components/contact";
-import { EducationSkills } from "@/components/education-skills";
-import { ExperienceIndex } from "@/components/experience-index";
 import { FeaturedCases } from "@/components/featured-cases";
 import { Hero } from "@/components/hero";
+import { ProfileIndex } from "@/components/profile-index";
 import { capabilities, contact, education, experiences, portfolioCases } from "@/content/portfolio";
 
 export default function Home() {
@@ -10,9 +8,12 @@ export default function Home() {
     <>
       <Hero cases={portfolioCases} />
       <FeaturedCases projects={portfolioCases} />
-      <ExperienceIndex items={experiences} />
-      <EducationSkills education={education} capabilities={capabilities} />
-      <Contact email={contact.email} github={contact.github} />
+      <ProfileIndex
+        experiences={experiences}
+        education={education}
+        capabilities={capabilities}
+        contact={contact}
+      />
     </>
   );
 }

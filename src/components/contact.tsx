@@ -1,7 +1,9 @@
-export function Contact({ email, github }: { email: string; github: string }) {
+export function Contact({ email, github, embedded = false }: { email: string; github: string; embedded?: boolean }) {
+  const Heading = embedded ? "h3" : "h2";
+
   return (
-    <section className="contact-section site-container" id="contact" aria-label="联系">
-      <h2>讨论 AI 产品机会</h2>
+    <section className={`contact-section${embedded ? " is-embedded" : " site-container"}`} id="contact" aria-label="联系">
+      <Heading>讨论 AI 产品机会</Heading>
       <div className="contact-links">
         <a href={`mailto:${email}`}>发送邮件</a>
         <a href={github} target="_blank" rel="noopener noreferrer">访问 GitHub</a>
