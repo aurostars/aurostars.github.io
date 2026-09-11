@@ -88,7 +88,7 @@ export const portfolioCases: ProjectCase[] = [
       { src: "/projects/resume-builder/modern-template.png", alt: "智能简历编辑工具的现代模板", width: 900, height: 1273 },
       { src: "/projects/resume-builder/polish.png", alt: "智能简历编辑工具的 AI 润色功能", width: 1440, height: 900 },
     ],
-    provenance: "基于 JOYCEQL/magic-resume 开源项目进行二次开发，页面必须标注上游仓库，并只归因于当前仓库能够验证的个人修改。",
+    provenance: "基于 https://github.com/JOYCEQL/magic-resume 二次开发；当前仓库 README 明确列出的个人修改范围：扩展 API 提供商、增加主题色预设与模板、增加简历快速生成、JD 定制优化、STAR 法则改写、中英简历互译和多格式导出。",
   },
   {
     slug: "meeting-minutes",

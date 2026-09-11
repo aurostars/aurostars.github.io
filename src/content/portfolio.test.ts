@@ -8,6 +8,16 @@ const expectedSlugs = [
   "meeting-minutes",
 ];
 
+const expectedRepositoryUrls = {
+  "job-application-helper": "https://github.com/aurostars/Job-Application-Helper",
+  "interview-review": "https://github.com/aurostars/Interview-Review-Assistant",
+  "resume-builder": "https://github.com/aurostars/Resume-Builder-and-Editor",
+  "meeting-minutes": "https://github.com/aurostars/meeting-minutes-extractor",
+} as const;
+
+const expectedResumeBuilderProvenance =
+  "基于 https://github.com/JOYCEQL/magic-resume 二次开发；当前仓库 README 明确列出的个人修改范围：扩展 API 提供商、增加主题色预设与模板、增加简历快速生成、JD 定制优化、STAR 法则改写、中英简历互译和多格式导出。";
+
 const expectedExperiences = [
   { period: "2026.03 - 2026.07", organization: "科大讯飞", role: "AI产品经理", highlight: "多模态心脏超声智能报告系统" },
   { period: "2025.10 - 2026.01", organization: "美团快驴", role: "产品运营", highlight: "AI 工具驱动业务流程提效" },
@@ -28,10 +38,16 @@ describe("portfolio content", () => {
       expect(item.background.length).toBeGreaterThan(20);
       expect(item.goal.length).toBeGreaterThan(10);
       expect(item.workflow).toHaveLength(5);
-      expect(item.repositoryUrl).toMatch(/^https:\/\/github\.com\/aurostars\//);
+      expect(item.repositoryUrl).toBe(expectedRepositoryUrls[item.slug]);
       expect(item.media.length).toBeGreaterThan(0);
       expect(item.media.every((media) => media.src.startsWith("/projects/"))).toBe(true);
     }
+  });
+
+  it("records the Resume Builder upstream and verified personal modification scope", () => {
+    const resumeBuilder = portfolioCases.find((item) => item.slug === "resume-builder");
+
+    expect(resumeBuilder?.provenance).toBe(expectedResumeBuilderProvenance);
   });
 
   it("keeps repository internships concise and contact limited to email and GitHub", () => {
