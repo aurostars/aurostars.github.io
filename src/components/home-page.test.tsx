@@ -92,6 +92,13 @@ describe("home page", () => {
     expect(caseRowRule).not.toMatch(/align-items:\s*start/);
   });
 
+  it("reserves the flexible card-body row before actions so narrow desktop cards keep one baseline", () => {
+    const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
+    const cardBodyRule = css.match(/\.case-card-body\s*\{([^}]*)\}/)?.[1];
+
+    expect(cardBodyRule).toMatch(/grid-template-rows:\s*auto auto auto 1fr auto/);
+  });
+
   it("renders four compact case summaries in approved order without expanded details", () => {
     render(<Home />);
     const cards = screen.getAllByRole("article", {

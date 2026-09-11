@@ -335,6 +335,7 @@ button:focus-visible {
 
 .case-card-body {
   display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
   align-content: start;
   gap: 0.875rem;
   padding: 1.375rem;
