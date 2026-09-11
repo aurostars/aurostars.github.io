@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -125,5 +127,11 @@ describe("home page", () => {
     expect(screen.getByRole("link", { name: "访问 GitHub" })).toHaveAttribute("href", "https://github.com/aurostars");
     expect(section.querySelector("form")).not.toBeInTheDocument();
     expect(section.textContent).not.toMatch(/电话|微信|微博|LinkedIn/);
+  });
+
+  it("ships the social preview image referenced by metadata", () => {
+    const ogImage = path.join(process.cwd(), "public", "og-portfolio.png");
+    expect(fs.existsSync(ogImage)).toBe(true);
+    expect(fs.statSync(ogImage).size).toBeGreaterThan(10_000);
   });
 });
