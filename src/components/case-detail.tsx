@@ -37,7 +37,12 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
         ) : null}
       </div>
 
-      <div className="case-gallery" role="group" aria-label={`${project.title}真实产品界面`}>
+      <div
+        className="case-gallery"
+        data-gallery-layout={project.media.length === 4 ? "featured-four" : "standard"}
+        role="group"
+        aria-label={`${project.title}真实产品界面`}
+      >
         {project.media.map((media, mediaIndex) => (
           <figure key={media.src}>
             <Image
@@ -53,8 +58,11 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
 
       <div className="case-detail-grid">
         <section>
-          <h4>背景与目标</h4>
+          <h4>背景</h4>
           <p>{project.background}</p>
+        </section>
+        <section>
+          <h4>目标</h4>
           <p>{project.goal}</p>
         </section>
         <section>

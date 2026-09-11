@@ -35,7 +35,7 @@ export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCard
             type="button"
             aria-expanded={expanded}
             aria-controls={`${project.slug}-detail`}
-            aria-label={`${expanded ? "收起" : "展开"}${project.title}详情`}
+            aria-label={`${expanded ? "收起详情" : "展开详情"}：${project.title}`}
             onClick={onToggle}
           >
             {expanded ? "收起详情" : "展开详情"}

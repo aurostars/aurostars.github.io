@@ -12,6 +12,16 @@ afterEach(cleanup);
 
 import RootLayout, { metadata } from "@/app/layout";
 import Home from "@/app/page";
+import { FeaturedCases } from "@/components/featured-cases";
+import { portfolioCases, type ProjectCase } from "@/content/portfolio";
+
+function makeProjectFixtures(count: number): ProjectCase[] {
+  return Array.from({ length: count }, (_, index) => ({
+    ...portfolioCases[index % portfolioCases.length],
+    slug: `fixture-${index + 1}` as ProjectCase["slug"],
+    title: `测试案例 ${index + 1}`,
+  }));
+}
 
 function renderLayout() {
   return render(
@@ -79,8 +89,8 @@ describe("home page", () => {
   it("opens one accessible case detail at a time and closes it on a second click", async () => {
     const user = userEvent.setup();
     render(<Home />);
-    const first = screen.getByRole("button", { name: "展开秋招网申助手详情" });
-    const second = screen.getByRole("button", { name: "展开面试复盘助手详情" });
+    const first = screen.getByRole("button", { name: "展开详情：秋招网申助手" });
+    const second = screen.getByRole("button", { name: "展开详情：面试复盘助手" });
 
     expect(first).toHaveAttribute("aria-expanded", "false");
     await user.click(first);
@@ -101,10 +111,13 @@ describe("home page", () => {
   it("keeps the complete verified case contract inside the expanded detail", async () => {
     const user = userEvent.setup();
     render(<Home />);
-    await user.click(screen.getByRole("button", { name: "展开智能简历编辑工具详情" }));
+    await user.click(screen.getByRole("button", { name: "展开详情：智能简历编辑工具" }));
     const detail = within(screen.getByRole("region", { name: "智能简历编辑工具案例详情" }));
-    expect(detail.getByRole("heading", { name: "背景与目标" })).toBeInTheDocument();
+    expect(detail.getByRole("heading", { name: "背景" })).toBeInTheDocument();
+    expect(detail.getByRole("heading", { name: "目标" })).toBeInTheDocument();
     expect(detail.getByRole("heading", { name: "核心问题" })).toBeInTheDocument();
+    expect(detail.getByText(portfolioCases[2].background)).toBeInTheDocument();
+    expect(detail.getByText(portfolioCases[2].goal)).toBeInTheDocument();
     expect(detail.getAllByTestId("workflow-step")).toHaveLength(5);
     expect(detail.getAllByRole("img").length).toBeGreaterThan(0);
     expect(detail.getByRole("link", { name: "查看智能简历编辑工具源码" })).toHaveAttribute("target", "_blank");
@@ -112,10 +125,20 @@ describe("home page", () => {
     expect(detail.getByText(/个人修改范围/)).toBeInTheDocument();
   });
 
+  it("marks the four-image gallery for a complete desktop mosaic", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+    await user.click(screen.getByRole("button", { name: "展开详情：秋招网申助手" }));
+
+    const gallery = screen.getByRole("group", { name: "秋招网申助手真实产品界面" });
+    expect(gallery).toHaveAttribute("data-gallery-layout", "featured-four");
+    expect(within(gallery).getAllByRole("img")).toHaveLength(4);
+  });
+
   it("places the detail directly after its selected summary without reordering summaries", async () => {
     const user = userEvent.setup();
     render(<Home />);
-    await user.click(screen.getByRole("button", { name: "展开智能简历编辑工具详情" }));
+    await user.click(screen.getByRole("button", { name: "展开详情：智能简历编辑工具" }));
 
     const cards = screen.getAllByRole("article", {
       name: /秋招网申助手|面试复盘助手|智能简历编辑工具|智能会议纪要工具/,
@@ -128,6 +151,53 @@ describe("home page", () => {
       "智能会议纪要工具",
     ]);
     expect(cards[2].nextElementSibling).toBe(detail);
+  });
+
+  it("renders five projects as three rows without an empty card and expands the fifth in row three", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<FeaturedCases projects={makeProjectFixtures(5)} />);
+    const rows = container.querySelectorAll(".case-row");
+    const cards = screen.getAllByRole("article");
+
+    expect(cards).toHaveLength(5);
+    expect(rows).toHaveLength(3);
+    expect(cards.map((card) => within(card).getByRole("heading", { level: 3 }).textContent)).toEqual([
+      "测试案例 1",
+      "测试案例 2",
+      "测试案例 3",
+      "测试案例 4",
+      "测试案例 5",
+    ]);
+    expect(rows[2].querySelectorAll(".case-card")).toHaveLength(1);
+
+    await user.click(screen.getByRole("button", { name: "展开详情：测试案例 5" }));
+    const detail = screen.getByRole("region", { name: "测试案例 5案例详情" });
+    expect(rows[2].contains(detail)).toBe(true);
+    expect(cards[4].nextElementSibling).toBe(detail);
+  });
+
+  it("renders six projects as three complete rows and expands the sixth in row three", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<FeaturedCases projects={makeProjectFixtures(6)} />);
+    const rows = container.querySelectorAll(".case-row");
+    const cards = screen.getAllByRole("article");
+
+    expect(cards).toHaveLength(6);
+    expect(rows).toHaveLength(3);
+    expect(cards.map((card) => within(card).getByRole("heading", { level: 3 }).textContent)).toEqual([
+      "测试案例 1",
+      "测试案例 2",
+      "测试案例 3",
+      "测试案例 4",
+      "测试案例 5",
+      "测试案例 6",
+    ]);
+    expect(rows[2].querySelectorAll(".case-card")).toHaveLength(2);
+
+    await user.click(screen.getByRole("button", { name: "展开详情：测试案例 6" }));
+    const detail = screen.getByRole("region", { name: "测试案例 6案例详情" });
+    expect(rows[2].contains(detail)).toBe(true);
+    expect(cards[5].nextElementSibling).toBe(detail);
   });
 
   it("groups experience, education, capabilities, and approved contact in one profile region", () => {
