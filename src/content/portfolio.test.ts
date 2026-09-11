@@ -1,3 +1,5 @@
+import { existsSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { contact, experiences, portfolioCases } from "./portfolio";
 
@@ -41,6 +43,17 @@ describe("portfolio content", () => {
       expect(item.repositoryUrl).toBe(expectedRepositoryUrls[item.slug]);
       expect(item.media.length).toBeGreaterThan(0);
       expect(item.media.every((media) => media.src.startsWith("/projects/"))).toBe(true);
+    }
+  });
+
+  it("backs every declared media item with a non-placeholder public asset", () => {
+    for (const item of portfolioCases) {
+      for (const media of item.media) {
+        const assetPath = join(process.cwd(), "public", media.src.replace(/^\//, ""));
+
+        expect(existsSync(assetPath), `${media.src} should exist under public`).toBe(true);
+        expect(statSync(assetPath).size, `${media.src} should be larger than 1KB`).toBeGreaterThan(1024);
+      }
     }
   });
 
