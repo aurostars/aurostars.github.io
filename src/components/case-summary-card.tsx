@@ -11,7 +11,11 @@ export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCard
   const cover = project.media.find((media) => !media.src.endsWith("icon.png")) ?? project.media[0];
 
   return (
-    <article className={`case-card${expanded ? " is-expanded" : ""}`} aria-labelledby={`${project.slug}-title`}>
+    <article
+      className={`case-card${expanded ? " is-expanded" : ""}`}
+      aria-labelledby={`${project.slug}-title`}
+      data-testid="case-summary-card"
+    >
       <figure className="case-card-media">
         <Image
           src={cover.src}

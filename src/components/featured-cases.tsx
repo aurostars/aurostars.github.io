@@ -12,8 +12,7 @@ export function FeaturedCases({ projects }: { projects: ProjectCase[] }) {
   return (
     <section className="cases-section site-container" id="cases" aria-labelledby="cases-title">
       <header className="section-heading compact-heading">
-        <h2 id="cases-title">代表案例</h2>
-        <p>先快速浏览项目，再展开查看完整判断与工作流程。</p>
+        <h2 id="cases-title">个人项目</h2>
       </header>
       <div className="case-grid">
         {rows.map((row) => (

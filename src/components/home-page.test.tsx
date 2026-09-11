@@ -51,7 +51,7 @@ describe("home page", () => {
     const { container } = render(<Home />);
     expect(container.querySelector(".reveal")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1 })).toBeVisible();
-    expect(screen.getByRole("region", { name: /代表案例/ })).toBeVisible();
+    expect(screen.getByRole("region", { name: "个人项目" })).toBeVisible();
   });
 
   it("renders the personal statement and profile index in the hero", () => {
@@ -64,6 +64,24 @@ describe("home page", () => {
     expect(within(hero).getAllByTestId("hero-education-row")).toHaveLength(2);
     expect(within(hero).getAllByTestId("experience-row")).toHaveLength(5);
     expect(within(hero).queryByRole("group", { name: "个人项目界面预览" })).not.toBeInTheDocument();
+  });
+
+  it("labels the project section without the removed helper copy", () => {
+    render(<Home />);
+
+    const section = screen.getByRole("region", { name: "个人项目" });
+    expect(within(section).getByRole("heading", { level: 2, name: "个人项目" })).toBeInTheDocument();
+    expect(within(section).queryByText("先快速浏览项目，再展开查看完整判断与工作流程。")).not.toBeInTheDocument();
+  });
+
+  it("marks every summary card with a bottom-aligned action group", () => {
+    render(<Home />);
+
+    const cards = screen.getAllByTestId("case-summary-card");
+    expect(cards).toHaveLength(4);
+    cards.forEach((card) => {
+      expect(card.querySelector(".case-card-actions")).toBeTruthy();
+    });
   });
 
   it("renders four compact case summaries in approved order without expanded details", () => {
