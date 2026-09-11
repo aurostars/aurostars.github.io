@@ -1,8 +1,8 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("next/font/google", () => ({
-  Geist: () => ({ variable: "font-geist-sans" }),
+vi.mock("geist/font/sans", () => ({
+  GeistSans: { variable: "font-geist-sans" },
 }));
 
 afterEach(cleanup);

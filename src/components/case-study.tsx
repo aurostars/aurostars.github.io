@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { ProjectCase } from "@/content/portfolio";
+import { Reveal } from "./reveal";
 
 const resumeBuilderUpstream = "https://github.com/JOYCEQL/magic-resume";
 
@@ -30,28 +31,30 @@ export function CaseStudy({ project, index }: { project: ProjectCase; index: num
       id={project.slug}
       aria-labelledby={`${project.slug}-title`}
     >
-      <header className="case-intro">
-        <p className="case-descriptor">{project.descriptor}</p>
-        <h3 id={`${project.slug}-title`}>{project.title}</h3>
-        <p className="case-summary">{project.summary}</p>
-        <div className="case-links" aria-label={`${project.title}项目链接`}>
-          <a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer">
-            查看{project.title}源码
-          </a>
-          {project.releaseUrl ? (
-            <a href={project.releaseUrl} target="_blank" rel="noopener noreferrer">
-              下载版本
+      <Reveal className="case-intro">
+        <header>
+          <p className="case-descriptor">{project.descriptor}</p>
+          <h3 id={`${project.slug}-title`}>{project.title}</h3>
+          <p className="case-summary">{project.summary}</p>
+          <div className="case-links" aria-label={`${project.title}项目链接`}>
+            <a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer">
+              查看{project.title}源码
             </a>
-          ) : null}
-          {project.slug === "resume-builder" ? (
-            <a href={resumeBuilderUpstream} target="_blank" rel="noopener noreferrer">
-              查看上游项目
-            </a>
-          ) : null}
-        </div>
-      </header>
+            {project.releaseUrl ? (
+              <a href={project.releaseUrl} target="_blank" rel="noopener noreferrer">
+                下载版本
+              </a>
+            ) : null}
+            {project.slug === "resume-builder" ? (
+              <a href={resumeBuilderUpstream} target="_blank" rel="noopener noreferrer">
+                查看上游项目
+              </a>
+            ) : null}
+          </div>
+        </header>
+      </Reveal>
 
-      <div className="case-gallery" aria-label={`${project.title}真实产品界面`}>
+      <Reveal className="case-gallery" delay={80} role="group" aria-label={`${project.title}真实产品界面`}>
         {project.media.map((media, mediaIndex) => (
           <figure key={media.src}>
             <Image
@@ -63,7 +66,7 @@ export function CaseStudy({ project, index }: { project: ProjectCase; index: num
             />
           </figure>
         ))}
-      </div>
+      </Reveal>
 
       <div className="case-detail-grid">
         <section>
