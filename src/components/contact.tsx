@@ -3,7 +3,7 @@ export function Contact({ email, github, embedded = false }: { email: string; gi
 
   return (
     <section className={`contact-section${embedded ? " is-embedded" : " site-container"}`} id="contact" aria-label="联系">
-      <Heading>讨论 AI 产品机会</Heading>
+      <Heading>欢迎联系～</Heading>
       <div className="contact-links">
         <a href={`mailto:${email}`}>发送邮件</a>
         <a href={github} target="_blank" rel="noopener noreferrer">访问 GitHub</a>

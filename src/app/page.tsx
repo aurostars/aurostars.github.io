@@ -1,19 +1,14 @@
+import { Contact } from "@/components/contact";
 import { FeaturedCases } from "@/components/featured-cases";
 import { Hero } from "@/components/hero";
-import { ProfileIndex } from "@/components/profile-index";
-import { capabilities, contact, education, experiences, portfolioCases } from "@/content/portfolio";
+import { contact, education, experiences, portfolioCases } from "@/content/portfolio";
 
 export default function Home() {
   return (
     <>
-      <Hero cases={portfolioCases} />
+      <Hero education={education} experiences={experiences} />
       <FeaturedCases projects={portfolioCases} />
-      <ProfileIndex
-        experiences={experiences}
-        education={education}
-        capabilities={capabilities}
-        contact={contact}
-      />
+      <Contact email={contact.email} github={contact.github} />
     </>
   );
 }

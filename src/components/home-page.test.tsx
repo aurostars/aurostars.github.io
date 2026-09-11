@@ -54,21 +54,16 @@ describe("home page", () => {
     expect(screen.getByRole("region", { name: /代表案例/ })).toBeVisible();
   });
 
-  it("renders a concise recruiter-focused hero with one case CTA", () => {
+  it("renders the personal statement and profile index in the hero", () => {
     render(<Home />);
-    expect(screen.getByRole("heading", { level: 1, name: "从问题定义，到结果验证。" })).toBeInTheDocument();
-    expect(screen.getByText("AI 产品经理")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "查看案例" })).toHaveAttribute("href", "#cases");
-    expect(screen.getAllByRole("link", { name: "查看案例" })).toHaveLength(1);
-  });
 
-  it("exposes the project collage as a named group with individually named images", () => {
-    const { container } = render(<Home />);
-    const page = within(container);
-    const collage = within(page.getByRole("group", { name: "个人项目界面预览" }));
-    expect(collage.getByRole("img", { name: "秋招网申助手的浏览器扩展图标" })).toBeInTheDocument();
-    expect(collage.getByRole("img", { name: "面试复盘助手的录音上传界面" })).toBeInTheDocument();
-    expect(collage.getByRole("img", { name: "智能简历编辑工具的编辑工作台" })).toBeInTheDocument();
+    const hero = screen.getByRole("region", { name: "认真体验，持续表达" });
+    expect(within(hero).getByRole("heading", { level: 1, name: "认真体验，持续表达" })).toBeInTheDocument();
+    expect(within(hero).getByRole("link", { name: "查看项目" })).toHaveAttribute("href", "#cases");
+    expect(within(hero).getByRole("region", { name: "经历" })).toHaveAttribute("id", "experience");
+    expect(within(hero).getAllByTestId("hero-education-row")).toHaveLength(2);
+    expect(within(hero).getAllByTestId("experience-row")).toHaveLength(5);
+    expect(within(hero).queryByRole("group", { name: "个人项目界面预览" })).not.toBeInTheDocument();
   });
 
   it("renders four compact case summaries in approved order without expanded details", () => {
@@ -200,14 +195,14 @@ describe("home page", () => {
     expect(cards[5].nextElementSibling).toBe(detail);
   });
 
-  it("groups experience, education, capabilities, and approved contact in one profile region", () => {
+  it("keeps only the approved contact block after personal projects", () => {
     render(<Home />);
-    const profile = screen.getByRole("region", { name: "经历与能力" });
-    expect(within(profile).getAllByTestId("experience-row")).toHaveLength(5);
-    expect(within(profile).getByText("北京师范大学 理论经济学硕士")).toBeInTheDocument();
-    expect(within(profile).getByText("AI 产品设计")).toBeInTheDocument();
-    expect(within(profile).getAllByRole("link")).toHaveLength(2);
-    expect(profile.textContent).not.toMatch(/电话|微信|微博|LinkedIn/);
+
+    const contact = screen.getByRole("region", { name: "联系" });
+    expect(within(contact).getByRole("heading", { name: "欢迎联系～" })).toBeInTheDocument();
+    expect(within(contact).getAllByRole("link")).toHaveLength(2);
+    expect(screen.queryByRole("region", { name: "经历与能力" })).not.toBeInTheDocument();
+    expect(document.querySelectorAll("[data-experience-row]")).toHaveLength(5);
   });
 
   it("renders exactly one case card per project and no future placeholders", () => {
@@ -221,15 +216,6 @@ describe("home page", () => {
     const section = screen.getByRole("region", { name: "经历" });
     expect(section.querySelectorAll("[data-experience-row]")).toHaveLength(5);
     expect(section.textContent).not.toContain("产品设计：");
-  });
-
-  it("renders education and capabilities after experience", () => {
-    render(<Home />);
-    const experience = screen.getByRole("region", { name: "经历" });
-    const education = screen.getByRole("region", { name: "教育与能力" });
-    expect(experience.compareDocumentPosition(education) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(within(education).getByText("北京师范大学 理论经济学硕士")).toBeInTheDocument();
-    expect(within(education).getByText("AI 产品设计")).toBeInTheDocument();
   });
 
   it("limits contact to email and GitHub", () => {
