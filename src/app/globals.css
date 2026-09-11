@@ -322,6 +322,125 @@ button:focus-visible {
   line-height: 1.7;
 }
 
+.case-grid {
+  display: grid;
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+.case-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.case-card {
+  display: grid;
+  grid-row: 1;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+}
+
+.case-card-media {
+  aspect-ratio: 16 / 9;
+  margin: 0;
+  overflow: hidden;
+  background: var(--color-surface-muted);
+}
+
+.case-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.case-card-body {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.case-card-body .case-descriptor,
+.case-card-body h3,
+.case-card-summary {
+  margin: 0;
+}
+
+.case-card-body h3 {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 750;
+  letter-spacing: -0.035em;
+}
+
+.case-card-summary {
+  color: var(--color-muted);
+  line-height: 1.65;
+}
+
+.case-card-keywords,
+.case-detail-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.case-card-keywords li {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  font-size: 0.875rem;
+}
+
+.case-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+}
+
+.case-card-actions button,
+.case-card-actions a,
+.case-detail-links a {
+  min-height: 2.75rem;
+  color: var(--color-foreground);
+  font-weight: 700;
+  text-decoration: underline 2px var(--color-accent);
+  text-underline-offset: 0.35rem;
+}
+
+.case-card-actions button {
+  cursor: pointer;
+}
+
+.case-detail {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  gap: 2rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+}
+
+.case-detail figure {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface-muted);
+}
+
+.case-detail img {
+  width: 100%;
+  height: auto;
+}
+
 .case-list {
   display: grid;
   gap: clamp(6rem, 11vw, 10rem);
@@ -598,6 +717,15 @@ button:focus-visible {
 }
 
 @media (max-width: 767px) {
+  .case-row {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .case-detail {
+    width: 100%;
+  }
+
   .cases-section {
     width: 100%;
     padding: 5rem 1rem;

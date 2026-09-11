@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("geist/font/sans", () => ({
@@ -53,54 +54,73 @@ describe("home page", () => {
     expect(collage.getByRole("img", { name: "智能简历编辑工具的编辑工作台" })).toBeInTheDocument();
   });
 
-  it("renders the four approved cases in order with repository links", () => {
+  it("renders four compact case summaries in approved order without expanded details", () => {
     render(<Home />);
-    const headings = screen.getAllByRole("heading", { level: 3 }).map((node) => node.textContent);
-    expect(headings).toEqual([
+    const cards = screen.getAllByRole("article", {
+      name: /秋招网申助手|面试复盘助手|智能简历编辑工具|智能会议纪要工具/,
+    });
+    expect(cards).toHaveLength(4);
+    expect(cards.map((card) => within(card).getByRole("heading", { level: 3 }).textContent)).toEqual([
       "秋招网申助手",
       "面试复盘助手",
       "智能简历编辑工具",
       "智能会议纪要工具",
     ]);
-
-    expect(screen.getByRole("link", { name: "查看秋招网申助手源码" })).toHaveAttribute(
-      "href",
-      "https://github.com/aurostars/Job-Application-Helper",
-    );
-    expect(screen.queryByText(/vedio-for-jiji/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: /案例详情/ })).not.toBeInTheDocument();
   });
 
-  it("renders five workflow steps and real media for every case", () => {
+  it("opens one accessible case detail at a time and closes it on a second click", async () => {
+    const user = userEvent.setup();
     render(<Home />);
-    for (const title of ["秋招网申助手", "面试复盘助手", "智能简历编辑工具", "智能会议纪要工具"]) {
-      const article = screen.getByRole("article", { name: title });
-      expect(article.querySelectorAll("[data-workflow-step]")).toHaveLength(5);
-      expect(article.querySelectorAll("img").length).toBeGreaterThan(0);
-    }
+    const first = screen.getByRole("button", { name: "展开秋招网申助手详情" });
+    const second = screen.getByRole("button", { name: "展开面试复盘助手详情" });
+
+    expect(first).toHaveAttribute("aria-expanded", "false");
+    await user.click(first);
+    expect(first).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("region", { name: "秋招网申助手案例详情" })).toBeInTheDocument();
+    expect(screen.getAllByRole("region", { name: /案例详情/ })).toHaveLength(1);
+
+    await user.click(second);
+    expect(first).toHaveAttribute("aria-expanded", "false");
+    expect(second).toHaveAttribute("aria-expanded", "true");
+    expect(screen.queryByRole("region", { name: "秋招网申助手案例详情" })).not.toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "面试复盘助手案例详情" })).toBeInTheDocument();
+
+    await user.click(second);
+    expect(screen.queryByRole("region", { name: /案例详情/ })).not.toBeInTheDocument();
   });
 
-  it("exposes background, goals, user problems, provenance, and responsive media", () => {
+  it("keeps the complete verified case contract inside the expanded detail", async () => {
+    const user = userEvent.setup();
     render(<Home />);
-    for (const title of ["秋招网申助手", "面试复盘助手", "智能简历编辑工具", "智能会议纪要工具"]) {
-      const article = within(screen.getByRole("article", { name: title }));
-      expect(article.getByRole("heading", { level: 4, name: "背景与目标" })).toBeInTheDocument();
-      expect(article.getByRole("heading", { level: 4, name: "核心问题" })).toBeInTheDocument();
-      expect(article.getByText(/独立开发项目|个人修改范围/)).toBeInTheDocument();
-      expect(article.getByRole("link", { name: `查看${title}源码` })).toHaveAttribute("target", "_blank");
-      for (const image of article.getAllByRole("img")) {
-        expect(image).toHaveAttribute("src", expect.stringMatching(/^\/projects\//));
-        expect(image).toHaveAttribute("width");
-        expect(image).toHaveAttribute("height");
-        expect(image).toHaveAttribute("sizes");
-      }
-    }
+    await user.click(screen.getByRole("button", { name: "展开智能简历编辑工具详情" }));
+    const detail = within(screen.getByRole("region", { name: "智能简历编辑工具案例详情" }));
+    expect(detail.getByRole("heading", { name: "背景与目标" })).toBeInTheDocument();
+    expect(detail.getByRole("heading", { name: "核心问题" })).toBeInTheDocument();
+    expect(detail.getAllByTestId("workflow-step")).toHaveLength(5);
+    expect(detail.getAllByRole("img").length).toBeGreaterThan(0);
+    expect(detail.getByRole("link", { name: "查看智能简历编辑工具源码" })).toHaveAttribute("target", "_blank");
+    expect(detail.getByText(/JOYCEQL\/magic-resume/)).toBeInTheDocument();
+    expect(detail.getByText(/个人修改范围/)).toBeInTheDocument();
   });
 
-  it("states the Resume Builder upstream and the verified personal modification scope", () => {
+  it("places the detail directly after its selected summary without reordering summaries", async () => {
+    const user = userEvent.setup();
     render(<Home />);
-    const article = within(screen.getByRole("article", { name: "智能简历编辑工具" }));
-    expect(article.getByText(/JOYCEQL\/magic-resume/)).toBeInTheDocument();
-    expect(article.getByText(/个人修改范围/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "展开智能简历编辑工具详情" }));
+
+    const cards = screen.getAllByRole("article", {
+      name: /秋招网申助手|面试复盘助手|智能简历编辑工具|智能会议纪要工具/,
+    });
+    const detail = screen.getByRole("region", { name: "智能简历编辑工具案例详情" });
+    expect(cards.map((card) => within(card).getByRole("heading", { level: 3 }).textContent)).toEqual([
+      "秋招网申助手",
+      "面试复盘助手",
+      "智能简历编辑工具",
+      "智能会议纪要工具",
+    ]);
+    expect(cards[2].nextElementSibling).toBe(detail);
   });
 
   it("renders five concise experience rows", () => {
