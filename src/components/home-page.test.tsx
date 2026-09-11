@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/font/google", () => ({
@@ -38,5 +38,14 @@ describe("home page", () => {
     expect(screen.getByText("AI 产品经理")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "查看案例" })).toHaveAttribute("href", "#cases");
     expect(screen.getAllByRole("link", { name: "查看案例" })).toHaveLength(1);
+  });
+
+  it("exposes the project collage as a named group with individually named images", () => {
+    const { container } = render(<Home />);
+    const page = within(container);
+    expect(page.getByRole("group", { name: "个人项目界面预览" })).toBeInTheDocument();
+    expect(page.getByRole("img", { name: "秋招网申助手的浏览器扩展图标" })).toBeInTheDocument();
+    expect(page.getByRole("img", { name: "面试复盘助手的录音上传界面" })).toBeInTheDocument();
+    expect(page.getByRole("img", { name: "智能简历编辑工具的编辑工作台" })).toBeInTheDocument();
   });
 });

@@ -15,7 +15,7 @@ export function Hero({ cases }: { cases: ProjectCase[] }) {
         </a>
       </div>
 
-      <div className="hero-collage" role="img" aria-label="个人项目界面预览">
+      <div className="hero-collage" role="group" aria-label="个人项目界面预览">
         {collage.map((media, index) => (
           <figure className={`hero-shot hero-shot-${index + 1}`} key={media.src}>
             <Image
