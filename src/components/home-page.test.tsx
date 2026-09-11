@@ -84,6 +84,14 @@ describe("home page", () => {
     });
   });
 
+  it("stretches cards in each case row so their actions share a baseline", () => {
+    const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
+    const caseRowRule = css.match(/\.case-row\s*\{([^}]*)\}/)?.[1];
+
+    expect(caseRowRule).toMatch(/align-items:\s*stretch/);
+    expect(caseRowRule).not.toMatch(/align-items:\s*start/);
+  });
+
   it("renders four compact case summaries in approved order without expanded details", () => {
     render(<Home />);
     const cards = screen.getAllByRole("article", {
