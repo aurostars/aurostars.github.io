@@ -23,7 +23,11 @@
   --portfolio-border: #cbd8e8;
   --portfolio-highlight: rgb(255 255 255 / 0.88);
   --portfolio-accent: #3568d4;
+  --portfolio-on-accent: #f8fbff;
   --portfolio-accent-soft: rgb(53 104 212 / 0.12);
+  --portfolio-ambient-primary: rgb(184 215 247 / 0.32);
+  --portfolio-ambient-secondary: rgb(210 228 249 / 0.34);
+  --portfolio-texture: rgb(54 91 137 / 0.12);
   --portfolio-shadow: 0 18px 48px rgb(38 73 116 / 0.12);
   --portfolio-card-shadow: 0 12px 30px rgb(38 73 116 / 0.1);
   --portfolio-card-shadow-pressed: 0 6px 16px rgb(38 73 116 / 0.13);
@@ -38,8 +42,8 @@ body {
   margin: 0;
   isolation: isolate;
   background:
-    radial-gradient(circle at 12% 8%, rgb(184 215 247 / 0.32), transparent 30rem),
-    radial-gradient(circle at 88% 24%, rgb(210 228 249 / 0.34), transparent 34rem),
+    radial-gradient(circle at 12% 8%, var(--portfolio-ambient-primary), transparent 30rem),
+    radial-gradient(circle at 88% 24%, var(--portfolio-ambient-secondary), transparent 34rem),
     var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
@@ -51,7 +55,7 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: radial-gradient(rgb(54 91 137 / 0.12) 0.55px, transparent 0.55px);
+  background-image: radial-gradient(var(--portfolio-texture) 0.55px, transparent 0.55px);
   background-size: 5px 5px;
   content: "";
   opacity: 0.18;
@@ -71,7 +75,7 @@ body::before {
   transform: translateY(-180%);
   border-radius: 0.625rem;
   background: var(--color-accent);
-  color: #ffffff;
+  color: var(--portfolio-on-accent);
   padding: 0.75rem 1rem;
   font-weight: 650;
   transition: transform 160ms ease;
@@ -646,7 +650,11 @@ button:focus-visible {
     --portfolio-border: #344663;
     --portfolio-highlight: rgb(218 234 255 / 0.14);
     --portfolio-accent: #7da5ff;
+    --portfolio-on-accent: #0d1626;
     --portfolio-accent-soft: rgb(125 165 255 / 0.16);
+    --portfolio-ambient-primary: rgb(46 82 128 / 0.24);
+    --portfolio-ambient-secondary: rgb(35 62 101 / 0.22);
+    --portfolio-texture: rgb(157 190 230 / 0.16);
     --portfolio-shadow: 0 18px 48px rgb(2 8 20 / 0.28);
     --portfolio-card-shadow: 0 12px 30px rgb(2 8 20 / 0.22);
     --portfolio-card-shadow-pressed: 0 6px 16px rgb(2 8 20 / 0.28);
@@ -654,12 +662,12 @@ button:focus-visible {
 
   body {
     background:
-      radial-gradient(circle at 12% 8%, rgb(46 82 128 / 0.24), transparent 30rem),
-      radial-gradient(circle at 88% 24%, rgb(35 62 101 / 0.22), transparent 34rem),
+      radial-gradient(circle at 12% 8%, var(--portfolio-ambient-primary), transparent 30rem),
+      radial-gradient(circle at 88% 24%, var(--portfolio-ambient-secondary), transparent 34rem),
       var(--color-background);
   }
 
   body::before {
-    background-image: radial-gradient(rgb(157 190 230 / 0.16) 0.55px, transparent 0.55px);
+    background-image: radial-gradient(var(--portfolio-texture) 0.55px, transparent 0.55px);
   }
 }

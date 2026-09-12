@@ -22,6 +22,25 @@ async function injectProjectFixtures(page: Page, count: 5 | 6) {
   }, count);
 }
 
+test("dark mode skip link keeps accessible contrast against the accent surface", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/", { waitUntil: "networkidle" });
+
+  const contrast = await page.locator(".skip-link").evaluate((element) => {
+    const parseRgb = (value: string) => value.match(/[\d.]+/g)!.slice(0, 3).map(Number);
+    const luminance = (channels: number[]) => channels
+      .map((channel) => channel / 255)
+      .map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+      .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+    const style = getComputedStyle(element);
+    const foreground = luminance(parseRgb(style.color));
+    const background = luminance(parseRgb(style.backgroundColor));
+    return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+  });
+
+  expect(contrast).toBeGreaterThanOrEqual(4.5);
+});
+
 test("project instruction stays adjacent to its heading and wraps without mobile overflow", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/", { waitUntil: "networkidle" });
