@@ -3,13 +3,42 @@ import path from "node:path";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("geist/font/sans", () => ({
   GeistSans: { variable: "font-geist-sans" },
 }));
 
-afterEach(cleanup);
+beforeEach(() => {
+  vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
+    matches: query === "(prefers-reduced-motion)",
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })));
+  vi.stubGlobal("IntersectionObserver", class {
+    private callback: IntersectionObserverCallback;
+
+    constructor(callback: IntersectionObserverCallback) {
+      this.callback = callback;
+    }
+
+    observe(element: Element) {
+      this.callback([{ isIntersecting: true, target: element } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+    }
+    unobserve() {}
+    disconnect() {}
+  });
+});
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 import RootLayout, { metadata } from "@/app/layout";
 import Home from "@/app/page";
@@ -58,11 +87,15 @@ describe("site shell", () => {
 });
 
 describe("home page", () => {
-  it("renders the primary page content immediately without scroll reveal wrappers", () => {
-    const { container } = render(<Home />);
-    expect(container.querySelector(".reveal")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1 })).toBeVisible();
-    expect(screen.getByRole("region", { name: "个人项目" })).toBeVisible();
+  it("wires one-time reveal groups without changing semantic landmarks", () => {
+    render(<Home />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "认真体验，持续表达" })).toBeVisible();
+    expect(screen.getByRole("region", { name: "经历" })).toHaveAttribute("id", "experience");
+    expect(screen.getByRole("region", { name: "个人项目" })).toHaveAttribute("id", "cases");
+    expect(screen.getByRole("region", { name: "联系" })).toHaveAttribute("id", "contact");
+    expect(screen.getAllByTestId("stagger-group").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByTestId("reveal").length).toBeGreaterThanOrEqual(3);
   });
 
   it("renders the personal statement and profile index in the hero", () => {
@@ -174,7 +207,7 @@ describe("home page", () => {
       "智能简历编辑工具",
       "智能会议纪要工具",
     ]);
-    expect(cards[2].nextElementSibling).toBe(detail);
+    expect(cards[2].parentElement?.nextElementSibling).toBe(detail);
   });
 
   it("renders five projects as three rows without an empty card and expands the fifth in row three", async () => {
@@ -197,7 +230,7 @@ describe("home page", () => {
     await user.click(screen.getByRole("button", { name: "展开详情：测试案例 5" }));
     const detail = screen.getByRole("region", { name: "测试案例 5案例详情" });
     expect(rows[2].contains(detail)).toBe(true);
-    expect(cards[4].nextElementSibling).toBe(detail);
+    expect(cards[4].parentElement?.nextElementSibling).toBe(detail);
   });
 
   it("renders six projects as three complete rows and expands the sixth in row three", async () => {
@@ -221,7 +254,7 @@ describe("home page", () => {
     await user.click(screen.getByRole("button", { name: "展开详情：测试案例 6" }));
     const detail = screen.getByRole("region", { name: "测试案例 6案例详情" });
     expect(rows[2].contains(detail)).toBe(true);
-    expect(cards[5].nextElementSibling).toBe(detail);
+    expect(cards[5].parentElement?.nextElementSibling).toBe(detail);
   });
 
   it("keeps only the approved contact block after personal projects", () => {

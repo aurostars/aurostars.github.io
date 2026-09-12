@@ -1,6 +1,8 @@
 "use client";
 
+import { motion } from "motion/react";
 import { Fragment, useState } from "react";
+import { Reveal } from "@/components/motion/reveal";
 import type { ProjectCase } from "@/content/portfolio";
 import { CaseDetail } from "./case-detail";
 import { CaseSummaryCard } from "./case-summary-card";
@@ -11,27 +13,30 @@ export function FeaturedCases({ projects }: { projects: ProjectCase[] }) {
 
   return (
     <section className="cases-section site-container" id="cases" aria-labelledby="cases-title">
-      <header className="section-heading compact-heading">
+      <Reveal className="section-heading compact-heading">
         <h2 id="cases-title">个人项目</h2>
-      </header>
+      </Reveal>
       <div className="case-grid">
-        {rows.map((row) => (
-          <div className="case-row" key={row[0].slug}>
-            {row.map((project) => {
+        {rows.map((row, rowIndex) => (
+          <motion.div layout className="case-row" key={row[0].slug}>
+            {row.map((project, projectIndex) => {
+              const globalIndex = rowIndex * 2 + projectIndex;
               const expanded = expandedSlug === project.slug;
 
               return (
                 <Fragment key={project.slug}>
-                  <CaseSummaryCard
-                    project={project}
-                    expanded={expanded}
-                    onToggle={() => setExpandedSlug((current) => (current === project.slug ? null : project.slug))}
-                  />
+                  <Reveal className="case-card-motion" delay={globalIndex * 0.06}>
+                    <CaseSummaryCard
+                      project={project}
+                      expanded={expanded}
+                      onToggle={() => setExpandedSlug((current) => (current === project.slug ? null : project.slug))}
+                    />
+                  </Reveal>
                   {expanded ? <CaseDetail project={project} /> : null}
                 </Fragment>
               );
             })}
-          </div>
+          </motion.div>
         ))}
       </div>
     </section>

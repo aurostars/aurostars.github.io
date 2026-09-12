@@ -130,10 +130,20 @@ button:focus-visible {
   padding-block: clamp(3.5rem, 6vw, 5rem);
 }
 
-.hero-copy {
+.hero-copy,
+.hero-copy-motion,
+.contact-motion {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
+}
+
+.hero-copy-motion {
+  width: 100%;
+}
+
+.contact-motion {
+  gap: 1rem;
 }
 
 .hero-kicker {
@@ -290,6 +300,17 @@ button:focus-visible {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
   align-items: stretch;
+}
+
+.case-card-motion {
+  display: grid;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.case-card-motion > .case-card {
+  grid-row: auto;
+  height: 100%;
 }
 
 .case-card {
@@ -637,6 +658,25 @@ button:focus-visible {
 
 .contact-links a:first-child:hover {
   background: #274eb7;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-nav a,
+  .case-card-actions button,
+  .case-card-actions a {
+    transition: color 200ms ease, background-color 200ms ease, border-color 200ms ease, transform 200ms ease;
+  }
+
+  .site-nav a:hover,
+  .case-card-actions button:hover,
+  .case-card-actions a:hover {
+    transform: translateY(-1px);
+  }
+
+  .case-card-actions button:active,
+  .case-card-actions a:active {
+    transform: translateY(1px) scale(0.98);
+  }
 }
 
 .contact-links a:active {
