@@ -39,6 +39,7 @@ export function StaggerItem({ children, className }: MotionChildrenProps) {
   return (
     <motion.div
       className={className}
+      initial={reduce ? false : "hidden"}
       variants={{
         hidden: reduce ? {} : { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: reduce ? { duration: 0 } : { duration: 0.6, ease: entranceEase } },
