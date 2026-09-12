@@ -53,6 +53,13 @@
 - `npm test -- src/components/case-dialog.test.tsx`：10/10 通过。
 - `npm run test:browser:portfolio -- --grep "native dialog traps focus|backdrop pointer|safe-area margins"`：3/3 通过。
 
+### Scoped re-review：body scroll lock 测试竞态
+
+- 根因：打开 dialog 后，测试依赖焦点操作消耗时间，再同步断言 `body.style.overflow === "hidden"`；React effect 尚未提交时会偶发读到测试预置值 `clip`。
+- RED 证据：连续全量浏览器运行的第 1 次出现 1 项失败（20/21 通过），实际值为 `clip`、预期为 `hidden`，稳定复现竞态。
+- 修复：将同步读取替换为 `expect.poll` 等待可观察的 scroll-lock 状态；未添加 retry、固定 sleep 或生产代码改动。
+- 重复验证：受影响测试连续运行 3 次，均为 1/1 通过；完整 portfolio 浏览器套件连续运行 3 次，均为 21/21 通过。
+
 ## 最终验证
 
 - `npm test -- src/components/case-dialog.test.tsx`：退出码 0；10/10 测试通过，原生 dialog、初始焦点、单次 cancel、关闭按钮、遮罩关闭、退出生命周期、项目切换、焦点恢复与滚动锁定均保持。

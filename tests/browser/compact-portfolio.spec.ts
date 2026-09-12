@@ -150,7 +150,7 @@ test("native dialog traps focus, Escape closes once, restores body styles, and f
   expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true);
   await page.keyboard.press("Shift+Tab");
   await expect(source).toBeFocused();
-  expect(await page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+  await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe("hidden");
 
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
