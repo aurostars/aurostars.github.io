@@ -111,11 +111,21 @@ describe("home page", () => {
     }
   });
 
-  it("labels the project section without the removed helper copy", () => {
+  it("describes the project grid with one shared instruction instead of per-card detail labels", () => {
     render(<Home />);
     const section = screen.getByRole("region", { name: "个人项目" });
+    const hint = within(section).getByText("点击卡片任意位置，可查看详情");
+    const grid = section.querySelector(".case-grid");
+
     expect(within(section).getByRole("heading", { level: 2, name: "个人项目" })).toBeInTheDocument();
+    expect(hint).toHaveAttribute("id", "cases-hint");
+    expect(grid).toHaveAttribute("aria-describedby", "cases-hint");
     expect(within(section).queryByText("先快速浏览项目，再展开查看完整判断与工作流程。")).not.toBeInTheDocument();
+    expect(within(section).queryAllByText("查看详情")).toHaveLength(0);
+
+    for (const card of within(section).getAllByRole("button", { name: /查看项目详情：/ })) {
+      expect(card).not.toHaveTextContent("查看详情");
+    }
   });
 
   it.each([4, 5, 6])("renders %i projects as one flat grid without placeholders", (count) => {
@@ -131,7 +141,7 @@ describe("home page", () => {
     const trigger = screen.getByRole("button", { name: "查看项目详情：秋招网申助手" });
     expect(trigger).toHaveClass("case-card");
     expect(within(trigger).queryByRole("link")).not.toBeInTheDocument();
-    expect(within(trigger).getByText("查看详情")).toBeInTheDocument();
+    expect(within(trigger).queryByText("查看详情")).not.toBeInTheDocument();
   });
 
   it("uses a non-icon product screenshot and preserves image metadata", () => {

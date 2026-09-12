@@ -28,7 +28,7 @@ export function CaseSummaryCard({ project, priority = false, buttonRef, onOpen }
   const rotateY = useTransform(springRotateY, (value) => Math.max(-2, Math.min(2, value)));
   const spotlightX = useTransform(pointerX, [0, 1], ["0%", "100%"]);
   const spotlightY = useTransform(pointerY, [0, 1], ["0%", "100%"]);
-  const spotlight = useMotionTemplate`radial-gradient(220px circle at ${spotlightX} ${spotlightY}, rgb(49 95 219 / 0.14), transparent 70%)`;
+  const spotlight = useMotionTemplate`radial-gradient(220px circle at ${spotlightX} ${spotlightY}, var(--portfolio-accent-soft), transparent 70%)`;
   const bounds = useRef<DOMRect | null>(null);
   const hoverAnimation = useRef<ReturnType<typeof animate> | null>(null);
   const tiltEnabled = canTilt && !reduce;
@@ -101,7 +101,6 @@ export function CaseSummaryCard({ project, priority = false, buttonRef, onOpen }
         <span className="case-descriptor">{project.descriptor}</span>
         <span className="case-card-title">{project.title}</span>
         <span className="case-card-summary">{project.summary}</span>
-        <span className="case-card-action">查看详情</span>
       </span>
     </motion.button>
   );

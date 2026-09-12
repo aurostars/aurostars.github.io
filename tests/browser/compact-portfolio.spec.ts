@@ -22,6 +22,23 @@ async function injectProjectFixtures(page: Page, count: 5 | 6) {
   }, count);
 }
 
+test("project instruction stays adjacent to its heading and wraps without mobile overflow", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/", { waitUntil: "networkidle" });
+
+  const heading = page.getByRole("heading", { name: "个人项目" });
+  const hint = page.locator("#cases-title + #cases-hint");
+  await expect(heading).toBeVisible();
+  await expect(hint).toHaveText("点击卡片任意位置，可查看详情");
+  await expect(page.locator(".case-grid")).toHaveAttribute("aria-describedby", "cases-hint");
+
+  const positions = await Promise.all([heading.boundingBox(), hint.boundingBox()]);
+  expect(positions[0]).not.toBeNull();
+  expect(positions[1]).not.toBeNull();
+  expect(positions[1]!.y).toBeGreaterThanOrEqual(positions[0]!.y + positions[0]!.height);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+});
+
 for (const viewport of viewports) {
   for (const count of [5, 6] as const) {
     test(`${viewport.width}px lays out ${count} real cards without overflow or placeholders`, async ({ page }) => {

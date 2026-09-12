@@ -22,8 +22,9 @@ export function FeaturedCases({ projects }: { projects: ProjectCase[] }) {
     <section className="cases-section site-container" id="cases" aria-labelledby="cases-title">
       <Reveal className="section-heading compact-heading">
         <h2 ref={headingRef} id="cases-title" tabIndex={-1}>个人项目</h2>
+        <p id="cases-hint" className="cases-hint">点击卡片任意位置，可查看详情</p>
       </Reveal>
-      <div className="case-grid" data-project-count={projects.length}>
+      <div className="case-grid" aria-describedby="cases-hint" data-project-count={projects.length}>
         {projects.map((project, index) => (
           <Reveal className="case-card-motion" delay={index * 0.04} key={project.slug}>
             <CaseSummaryCard
