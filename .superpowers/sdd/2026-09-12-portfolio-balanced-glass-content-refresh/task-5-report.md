@@ -25,19 +25,48 @@
 
 同一命令在最小定位修复后退出码 0；1/1 测试通过，768/1024/1440px 的水平与垂直中心偏差均不超过 2px。
 
+## Review 修复波次
+
+### 生命周期与动画
+
+- 为 `.case-dialog-panel` 增加 open/close 的 transform + opacity 动画，并以 `project.slug` 作为稳定 key，使项目切换先退出旧 panel、再进入新 panel。
+- `AnimatePresence.onExitComplete` 完成后才调用原生 `dialog.close()`、恢复 body 样式与焦点，退出期间 dialog 持续保留在 top layer。
+- 移除 dialog 层的 Escape `keydown` 关闭路径，仅由原生 `cancel` 事件触发一次关闭，避免重复 History 操作。
+- 增加边界式 Tab/Shift+Tab 循环；Reduced Motion 下进入/退出均不产生位移或缩放。
+
+### 新增真实浏览器覆盖
+
+- 原生 focus trap：Tab 与 Shift+Tab 均不会离开 dialog。
+- Escape 只回退一个 History entry，并可通过 `goForward()` 重新打开项目。
+- 真实 backdrop 坐标上的 pointer down/up 可关闭 dialog。
+- 关闭动画完成后恢复原有 body `overflow` 与 `padding-right`。
+- 通过可覆盖的 safe-area CSS 变量模拟左右刘海区域，验证 320px 下 dialog 保持边界与无横向溢出。
+
+### Review RED
+
+- `npm test -- src/components/case-dialog.test.tsx`：新增 2 项生命周期测试按预期失败；旧实现会立即移除 `open`，项目切换复用同一 panel DOM。
+- `npm run test:browser:portfolio -- --grep "native dialog traps focus|backdrop pointer"`：真实浏览器焦点循环断言失败，证明仅依赖默认行为不足。
+- `npm run test:browser:portfolio -- --grep "safe-area margins"`：模拟左右安全区时 dialog 左边距仅 8px，未消费安全区变量。
+
+### Review GREEN
+
+- `npm test -- src/components/case-dialog.test.tsx`：10/10 通过。
+- `npm run test:browser:portfolio -- --grep "native dialog traps focus|backdrop pointer|safe-area margins"`：3/3 通过。
+
 ## 最终验证
 
-- `npm test -- src/components/case-dialog.test.tsx`：退出码 0；8/8 测试通过，原生 dialog、初始焦点、Escape、关闭按钮、遮罩关闭、焦点恢复与滚动锁定均保持。
-- `npm run test:browser:portfolio -- --grep "dialog|deep link|history|focus"`：退出码 0；4/4 测试通过。
-- `npm run test:browser:portfolio`：退出码 0；18/18 Chromium 测试通过；每次测试前生产构建成功。
+- `npm test -- src/components/case-dialog.test.tsx`：退出码 0；10/10 测试通过，原生 dialog、初始焦点、单次 cancel、关闭按钮、遮罩关闭、退出生命周期、项目切换、焦点恢复与滚动锁定均保持。
+- `npm run test:browser:portfolio`：退出码 0；21/21 Chromium 测试通过；每次测试前生产构建成功。
 - `npm run test:browser:reduced`：退出码 0；1/1 测试通过，Reduced Motion 下 panel computed transform 为 `none`。
-- `npm test`：退出码 0；10/10 测试文件、58/58 测试通过。
+- `npm test`：退出码 0；10/10 测试文件、60/60 测试通过。
 - `npm run lint`：退出码 0。
 - `npm run typecheck`：退出码 0。
 - `git diff --check`：退出码 0。
 
 ## 变更文件
 
+- `src/components/case-dialog.tsx`
+- `src/components/case-dialog.test.tsx`
 - `src/app/globals.css`
 - `tests/browser/compact-portfolio.spec.ts`
 - `.superpowers/sdd/2026-09-12-portfolio-balanced-glass-content-refresh/task-5-report.md`

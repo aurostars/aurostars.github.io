@@ -1,5 +1,5 @@
 import { createRef } from "react";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CaseDialog } from "@/components/case-dialog";
@@ -45,22 +45,23 @@ describe("CaseDialog", () => {
     expect(dialog).toHaveAttribute("aria-labelledby", "case-dialog-title");
   });
 
-  it("locks body scroll while open and restores prior inline styles on close", () => {
+  it("locks body scroll while open and restores prior inline styles after exit", async () => {
     document.body.style.overflow = "visible";
     document.body.style.paddingRight = "7px";
     const { rerenderProject } = renderDialog({ project: portfolioCases[0] });
     expect(document.body.style.overflow).toBe("hidden");
     expect(document.body.style.paddingRight).not.toBe("7px");
     rerenderProject(null);
-    expect(document.body.style.overflow).toBe("visible");
+    expect(document.body.style.overflow).toBe("hidden");
+    await waitFor(() => expect(document.body.style.overflow).toBe("visible"));
     expect(document.body.style.paddingRight).toBe("7px");
   });
 
-  it("closes with Escape", async () => {
-    const user = userEvent.setup();
+  it("handles the native Escape cancel event once", () => {
     const onClose = vi.fn();
     renderDialog({ project: portfolioCases[0], onClose });
-    await user.keyboard("{Escape}");
+    const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
+    fireEvent(dialog, new Event("cancel", { bubbles: false, cancelable: true }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
@@ -89,19 +90,41 @@ describe("CaseDialog", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("returns focus to its trigger", () => {
+  it("keeps the native dialog open until the panel exit finishes", async () => {
+    const { rerenderProject, fallbackFocusRef } = renderDialog({ project: portfolioCases[0] });
+    const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
+
+    rerenderProject(null);
+
+    expect(dialog).toHaveAttribute("open");
+    expect(fallbackFocusRef.current).not.toHaveFocus();
+    await waitFor(() => expect(dialog).not.toHaveAttribute("open"));
+    expect(fallbackFocusRef.current).toHaveFocus();
+  });
+
+  it("replaces the animated panel when the selected project changes", async () => {
+    const { rerenderProject } = renderDialog({ project: portfolioCases[0] });
+    const firstPanel = screen.getByRole("dialog", { name: "秋招网申助手" }).querySelector(".case-dialog-panel");
+
+    rerenderProject(portfolioCases[1]);
+
+    const nextDialog = await screen.findByRole("dialog", { name: portfolioCases[1].title });
+    expect(nextDialog.querySelector(".case-dialog-panel")).not.toBe(firstPanel);
+  });
+
+  it("returns focus to its trigger", async () => {
     const trigger = document.createElement("button");
     trigger.textContent = "项目触发器";
     document.body.append(trigger);
     const { rerenderProject } = renderDialog({ project: portfolioCases[0], returnFocusTo: trigger });
     rerenderProject(null);
-    expect(trigger).toHaveFocus();
+    await waitFor(() => expect(trigger).toHaveFocus());
     trigger.remove();
   });
 
-  it("uses the project heading for deep-link focus fallback", () => {
+  it("uses the project heading for deep-link focus fallback", async () => {
     const { rerenderProject, fallbackFocusRef } = renderDialog({ project: portfolioCases[0], returnFocusTo: null });
     rerenderProject(null);
-    expect(fallbackFocusRef.current).toHaveFocus();
+    await waitFor(() => expect(fallbackFocusRef.current).toHaveFocus());
   });
 });

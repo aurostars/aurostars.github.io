@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type RefObject, type SyntheticEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject, type SyntheticEvent } from "react";
 import { CaseDetail } from "@/components/case-detail";
 import { entranceEase } from "@/components/motion/motion-config";
 import { usePrefersReducedMotion } from "@/components/motion/use-prefers-reduced-motion";
@@ -17,28 +17,26 @@ export interface CaseDialogProps {
 export function CaseDialog({ project, onClose, returnFocusTo, fallbackFocusRef }: CaseDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const wasOpenRef = useRef(false);
   const backdropPointerDownRef = useRef(false);
+  const projectRef = useRef<ProjectCase | null>(project);
+  const [dialogActive, setDialogActive] = useState(Boolean(project));
   const reduce = usePrefersReducedMotion();
 
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    if (project) {
-      if (!dialog.open) dialog.showModal();
-      closeButtonRef.current?.focus();
-    } else if (wasOpenRef.current) {
-      if (dialog.open) dialog.close();
-      const focusTarget = returnFocusTo?.isConnected ? returnFocusTo : fallbackFocusRef.current;
-      focusTarget?.focus();
-    }
-
-    wasOpenRef.current = Boolean(project);
-  }, [fallbackFocusRef, project, returnFocusTo]);
+    projectRef.current = project;
+  }, [project]);
 
   useEffect(() => {
-    if (!project) return;
+    const dialog = dialogRef.current;
+    if (!dialog || !project) return;
+
+    setDialogActive(true);
+    if (!dialog.open) dialog.showModal();
+    closeButtonRef.current?.focus();
+  }, [project]);
+
+  useEffect(() => {
+    if (!dialogActive) return;
 
     const { overflow, paddingRight } = document.body.style;
     const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
@@ -51,7 +49,17 @@ export function CaseDialog({ project, onClose, returnFocusTo, fallbackFocusRef }
       document.body.style.overflow = overflow;
       document.body.style.paddingRight = paddingRight;
     };
-  }, [project]);
+  }, [dialogActive]);
+
+  function finishExit() {
+    if (projectRef.current) return;
+
+    const dialog = dialogRef.current;
+    if (dialog?.open) dialog.close();
+    setDialogActive(false);
+    const focusTarget = returnFocusTo?.isConnected ? returnFocusTo : fallbackFocusRef.current;
+    focusTarget?.focus();
+  }
 
   function handleCancel(event: SyntheticEvent<HTMLDialogElement>) {
     event.preventDefault();
@@ -59,9 +67,24 @@ export function CaseDialog({ project, onClose, returnFocusTo, fallbackFocusRef }
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDialogElement>) {
-    if (event.key !== "Escape") return;
-    event.preventDefault();
-    onClose();
+    if (event.key !== "Tab") return;
+
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )).filter((element) => !element.hasAttribute("hidden"));
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (!first || !last) return;
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   function handleBackdropPointerDown(event: PointerEvent<HTMLDialogElement>) {
@@ -77,6 +100,7 @@ export function CaseDialog({ project, onClose, returnFocusTo, fallbackFocusRef }
 
   const initial = reduce ? false : { opacity: 0, y: 12 };
   const animate = { opacity: 1, y: 0 };
+  const exit = reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: -8 };
   const transition = { duration: reduce ? 0 : 0.25, ease: entranceEase };
 
   return (
@@ -89,12 +113,14 @@ export function CaseDialog({ project, onClose, returnFocusTo, fallbackFocusRef }
       onPointerDown={handleBackdropPointerDown}
       onPointerUp={handleBackdropPointerUp}
     >
-      <AnimatePresence>
+      <AnimatePresence mode="wait" onExitComplete={finishExit}>
         {project ? (
           <motion.div
+            key={project.slug}
             className="case-dialog-panel"
             initial={initial}
             animate={animate}
+            exit={exit}
             transition={transition}
           >
             <header className="case-dialog-header">
@@ -103,6 +129,7 @@ export function CaseDialog({ project, onClose, returnFocusTo, fallbackFocusRef }
                 ref={closeButtonRef}
                 type="button"
                 aria-label={`关闭${project.title}详情`}
+                autoFocus
                 onClick={onClose}
               >
                 关闭

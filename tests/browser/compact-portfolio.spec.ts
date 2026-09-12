@@ -131,6 +131,56 @@ test("centers the native dialog in the viewport at desktop widths", async ({ pag
   }
 });
 
+test("native dialog traps focus, Escape closes once, restores body styles, and forward reopens", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.evaluate(() => {
+    document.body.style.overflow = "clip";
+    document.body.style.paddingRight = "7px";
+  });
+
+  await page.getByRole("button", { name: "查看项目详情：秋招网申助手" }).click();
+  const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
+  const close = page.getByRole("button", { name: "关闭秋招网申助手详情" });
+  const source = dialog.getByRole("link", { name: /查看源码/ });
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(source).toBeFocused();
+  await page.keyboard.press("Tab");
+  expect(await dialog.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+  await page.keyboard.press("Shift+Tab");
+  await expect(source).toBeFocused();
+  expect(await page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/$/);
+  expect(await page.evaluate(() => ({
+    overflow: document.body.style.overflow,
+    paddingRight: document.body.style.paddingRight,
+  }))).toEqual({ overflow: "clip", paddingRight: "7px" });
+
+  await page.goForward();
+  await expect(page).toHaveURL(/\?project=job-application-helper$/);
+  await expect(dialog).toBeVisible();
+  await expect(close).toBeFocused();
+});
+
+test("backdrop pointer down and up close the native dialog", async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "查看项目详情：秋招网申助手" }).click();
+  const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
+  await expect(dialog).toBeVisible();
+
+  await page.mouse.move(2, 2);
+  await page.mouse.down();
+  await page.mouse.up();
+
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/$/);
+});
+
 test("opens, deep-links, restores history, focus, and body scrolling", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/", { waitUntil: "networkidle" });
@@ -155,6 +205,20 @@ test("direct project URL closes to overview and focuses project heading", async 
   await page.getByRole("button", { name: "关闭智能会议纪要工具详情" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("heading", { name: "个人项目" })).toBeFocused();
+});
+
+test("mobile dialog honors inline safe-area margins at 320px", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/?project=resume-builder", { waitUntil: "networkidle" });
+  await page.addStyleTag({
+    content: ".case-dialog { --case-dialog-safe-left: 24px; --case-dialog-safe-right: 20px; }",
+  });
+
+  const box = await page.getByRole("dialog", { name: "智能简历编辑工具" }).boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.x).toBeGreaterThanOrEqual(24);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(300);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
 });
 
 test("mobile dialog stays inside dynamic viewport and scrolls internally", async ({ page }) => {

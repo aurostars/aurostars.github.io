@@ -323,7 +323,9 @@ button:focus-visible {
 }
 
 .case-dialog {
-  width: min(calc(100vw - 2rem), 60rem);
+  --case-dialog-safe-left: max(1rem, env(safe-area-inset-left, 0px));
+  --case-dialog-safe-right: max(1rem, env(safe-area-inset-right, 0px));
+  width: min(calc(100vw - var(--case-dialog-safe-left) - var(--case-dialog-safe-right)), 60rem);
   max-width: none;
   max-height: 86dvh;
   margin: auto;
@@ -572,8 +574,11 @@ button:focus-visible {
   }
 
   .case-dialog {
-    width: calc(100% - 16px);
+    --case-dialog-safe-left: max(0.5rem, env(safe-area-inset-left, 0px));
+    --case-dialog-safe-right: max(0.5rem, env(safe-area-inset-right, 0px));
+    width: calc(100vw - var(--case-dialog-safe-left) - var(--case-dialog-safe-right));
     max-height: calc(100dvh - 16px);
+    margin-inline: var(--case-dialog-safe-left) var(--case-dialog-safe-right);
     border-radius: 1rem;
   }
 
