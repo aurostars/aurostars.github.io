@@ -16,12 +16,6 @@ function imageSizes(project: ProjectCase, mediaIndex: number) {
 export function CaseDetail({ project }: { project: ProjectCase }) {
   return (
     <div className="case-detail">
-      <div className="case-detail-links" aria-label={`${project.title}项目链接`}>
-        <a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer">
-          查看源码<span className="sr-only">（新窗口）</span>
-        </a>
-      </div>
-
       <div
         className="case-gallery"
         data-gallery-layout={project.media.length === 4 ? "featured-four" : "standard"}
@@ -79,6 +73,12 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
       </section>
 
       <p className="case-provenance">{project.provenance}</p>
+
+      <div className="case-detail-links" aria-label={`${project.title}项目链接`}>
+        <a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer">
+          查看源码<span className="sr-only">（新窗口）</span>
+        </a>
+      </div>
     </div>
   );
 }

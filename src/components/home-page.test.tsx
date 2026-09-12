@@ -185,6 +185,17 @@ describe("home page", () => {
     expect(dialog.queryByText("查看上游项目")).not.toBeInTheDocument();
   });
 
+  it("places the source link after the verified feature list", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+    await user.click(screen.getByRole("button", { name: "查看项目详情：秋招网申助手" }));
+    const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
+    const features = within(dialog).getByRole("region", { name: "已实现功能" });
+    const sourceLink = within(dialog).getByRole("link", { name: /查看源码/ });
+
+    expect(features.compareDocumentPosition(sourceLink) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("shows only the two approved Job Application Helper screenshots", async () => {
     const user = userEvent.setup();
     render(<Home />);
