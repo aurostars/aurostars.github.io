@@ -146,6 +146,7 @@ describe("CaseSummaryCard pointer feedback", () => {
     expect(samples.every(({ rotateY }) => Math.abs(rotateY) <= 3)).toBe(true);
     expect(samples.every(({ y }) => Math.abs(y) <= 4)).toBe(true);
     expect(spotlight.style.background).toContain("100% 0%");
+    expect(spotlight.style.pointerEvents).toBe("none");
 
     screen.getByRole("button", { name: /展开详情/ }).click();
     expect(onToggle).toHaveBeenCalledOnce();

@@ -32,14 +32,17 @@ export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCard
   const tiltEnabled = canTilt && !reduce;
 
   useEffect(() => {
-    if (tiltEnabled) return;
-    bounds.current = null;
-    pointerX.set(0.5);
-    pointerY.set(0.5);
-    springRotateX.jump(0);
-    springRotateY.jump(0);
-    hoverAnimation.current?.stop();
-    hoverY.set(0);
+    if (!tiltEnabled) {
+      bounds.current = null;
+      pointerX.set(0.5);
+      pointerY.set(0.5);
+      springRotateX.jump(0);
+      springRotateY.jump(0);
+      hoverAnimation.current?.stop();
+      hoverY.set(0);
+    }
+
+    return () => hoverAnimation.current?.stop();
   }, [hoverY, pointerX, pointerY, springRotateX, springRotateY, tiltEnabled]);
 
   function handlePointerEnter(event: React.PointerEvent<HTMLElement>) {
@@ -80,7 +83,9 @@ export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCard
       <motion.div
         className="case-card-spotlight"
         aria-hidden="true"
-        style={tiltEnabled ? { background: spotlight } : { background: "none" }}
+        style={tiltEnabled
+          ? { background: spotlight, pointerEvents: "none" }
+          : { background: "none", pointerEvents: "none" }}
       />
       <figure className="case-card-media">
         <Image
