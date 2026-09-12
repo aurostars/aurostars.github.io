@@ -113,6 +113,7 @@ describe("home page", () => {
   it("reveals project cards with delays increasing in global DOM order", () => {
     render(<Home />);
 
+    expect(screen.getByRole("region", { name: "个人项目" })).toHaveAttribute("id", "cases");
     const cards = Array.from(document.querySelectorAll(".case-card-motion"));
     expect(cards.map((card) => card.getAttribute("data-delay"))).toEqual(["0", "0.06", "0.12", "0.18"]);
     expect(cards.every((card) => card.parentElement?.classList.contains("case-row"))).toBe(true);
