@@ -1,5 +1,6 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useProjectDialogState } from "@/components/use-project-dialog-state";
 import { portfolioCases } from "@/content/portfolio";
@@ -27,6 +28,15 @@ afterEach(() => {
 });
 
 describe("useProjectDialogState", () => {
+  it("keeps the server snapshot empty before synchronizing a valid deep link", () => {
+    history.replaceState({}, "", "/?project=interview-review");
+
+    expect(renderToString(<Harness />)).toContain("none");
+
+    render(<Harness />);
+    expect(screen.getByLabelText("selected project")).toHaveTextContent("面试复盘助手");
+  });
+
   it("pushes a marked entry when a grid card opens", async () => {
     const user = userEvent.setup();
     const push = vi.spyOn(history, "pushState");

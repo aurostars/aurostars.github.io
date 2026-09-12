@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 import type { ProjectCase } from "@/content/portfolio";
 
 const marker = "portfolioDialogEntry" as const;
+
+type StoreListener = () => void;
 
 interface PortfolioHistoryState {
   portfolioDialogEntry?: true;
@@ -15,9 +17,8 @@ export interface ProjectDialogState {
   closeProject: () => void;
 }
 
-function projectFromLocation(projects: ProjectCase[]) {
-  const slug = new URLSearchParams(window.location.search).get("project");
-  return slug ? projects.find((project) => project.slug === slug) ?? null : null;
+function projectSlugFromLocation() {
+  return new URLSearchParams(window.location.search).get("project");
 }
 
 function urlWithoutProject() {
@@ -34,40 +35,60 @@ function urlWithProject(slug: ProjectCase["slug"]) {
 
 export function useProjectDialogState(projects: ProjectCase[]): ProjectDialogState {
   const projectsBySlug = useMemo(
-    () => new Map(projects.map((project) => [project.slug, project])),
+    () => new Map<string, ProjectCase>(projects.map((project) => [project.slug, project])),
     [projects],
   );
-  const [selectedProject, setSelectedProject] = useState<ProjectCase | null>(null);
+  const listeners = useRef(new Set<StoreListener>());
 
-  const syncFromLocation = useCallback(() => {
-    const project = projectFromLocation(projects);
-    const hasProjectSlug = new URLSearchParams(window.location.search).has("project");
+  const projectFromLocation = useCallback(() => {
+    const slug = projectSlugFromLocation();
+    return slug ? projectsBySlug.get(slug) ?? null : null;
+  }, [projectsBySlug]);
 
-    if (hasProjectSlug && !project) {
+  const cleanInvalidProject = useCallback(() => {
+    const slug = projectSlugFromLocation();
+    if (slug !== null && !projectsBySlug.has(slug)) {
       history.replaceState(history.state, "", urlWithoutProject());
     }
-    setSelectedProject(project);
-  }, [projects]);
+  }, [projectsBySlug]);
 
-  useEffect(() => {
-    syncFromLocation();
-    window.addEventListener("popstate", syncFromLocation);
-    return () => window.removeEventListener("popstate", syncFromLocation);
-  }, [syncFromLocation]);
+  const subscribe = useCallback(
+    (listener: StoreListener) => {
+      listeners.current.add(listener);
+      cleanInvalidProject();
+
+      const handlePopState = () => {
+        cleanInvalidProject();
+        listener();
+      };
+      window.addEventListener("popstate", handlePopState);
+
+      return () => {
+        listeners.current.delete(listener);
+        window.removeEventListener("popstate", handlePopState);
+      };
+    },
+    [cleanInvalidProject],
+  );
+
+  const selectedProject = useSyncExternalStore(subscribe, projectFromLocation, () => null);
+
+  const notifyListeners = useCallback(() => {
+    listeners.current.forEach((listener) => listener());
+  }, []);
 
   const openProject = useCallback(
     (slug: ProjectCase["slug"]) => {
-      const project = projectsBySlug.get(slug);
-      if (!project) return;
+      if (!projectsBySlug.has(slug)) return;
 
-      setSelectedProject(project);
       const state: PortfolioHistoryState = {
         ...(history.state ?? {}),
         [marker]: true,
       };
       history.pushState(state, "", urlWithProject(slug));
+      notifyListeners();
     },
-    [projectsBySlug],
+    [notifyListeners, projectsBySlug],
   );
 
   const closeProject = useCallback(() => {
@@ -76,9 +97,9 @@ export function useProjectDialogState(projects: ProjectCase[]): ProjectDialogSta
       return;
     }
 
-    setSelectedProject(null);
     history.replaceState(history.state, "", urlWithoutProject());
-  }, []);
+    notifyListeners();
+  }, [notifyListeners]);
 
   return { selectedProject, openProject, closeProject };
 }
