@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -184,6 +184,19 @@ describe("home page", () => {
 
     await user.click(second);
     expect(screen.queryByRole("region", { name: /案例详情/ })).not.toBeInTheDocument();
+  });
+
+  it("removes the previous detail when switching projects with presence enabled", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+
+    const toggles = screen.getAllByRole("button", { name: /展开详情/ });
+    await user.click(toggles[0]);
+    expect(screen.getAllByRole("region", { name: /案例详情/ })).toHaveLength(1);
+    await user.click(toggles[1]);
+    await waitFor(() => {
+      expect(screen.getAllByRole("region", { name: /案例详情/ })).toHaveLength(1);
+    });
   });
 
   it("keeps the complete verified case contract inside the expanded detail", async () => {

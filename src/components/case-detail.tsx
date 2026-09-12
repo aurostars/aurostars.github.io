@@ -1,4 +1,8 @@
+"use client";
+
 import Image from "next/image";
+import { motion, useReducedMotion } from "motion/react";
+import { entranceEase } from "@/components/motion/motion-config";
 import type { ProjectCase } from "@/content/portfolio";
 
 const resumeBuilderUpstream = "https://github.com/JOYCEQL/magic-resume";
@@ -14,12 +18,19 @@ function imageSizes(project: ProjectCase, mediaIndex: number) {
 }
 
 export function CaseDetail({ project }: { project: ProjectCase }) {
+  const reduce = useReducedMotion();
+
   return (
-    <section
+    <motion.section
+      layout="position"
       className="case-detail"
       id={`${project.slug}-detail`}
       role="region"
       aria-label={`${project.title}案例详情`}
+      initial={reduce ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+      transition={reduce ? { duration: 0 } : { duration: 0.35, ease: entranceEase }}
     >
       <div className="case-detail-links" aria-label={`${project.title}项目链接`}>
         <a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer">
@@ -96,6 +107,6 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
       </section>
 
       <p className="case-provenance">{project.provenance}</p>
-    </section>
+    </motion.section>
   );
 }

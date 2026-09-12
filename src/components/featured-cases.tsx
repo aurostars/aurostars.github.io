@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { Fragment, useState } from "react";
 import { Reveal } from "@/components/motion/reveal";
 import type { ProjectCase } from "@/content/portfolio";
@@ -32,7 +32,9 @@ export function FeaturedCases({ projects }: { projects: ProjectCase[] }) {
                       onToggle={() => setExpandedSlug((current) => (current === project.slug ? null : project.slug))}
                     />
                   </Reveal>
-                  {expanded ? <CaseDetail project={project} /> : null}
+                  <AnimatePresence initial={false}>
+                    {expanded ? <CaseDetail key={project.slug} project={project} /> : null}
+                  </AnimatePresence>
                 </Fragment>
               );
             })}
