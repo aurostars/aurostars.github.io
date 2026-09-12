@@ -23,5 +23,7 @@ test("reduced motion keeps offscreen reveal and stagger content visible without 
   await page.getByRole("button", { name: "查看项目详情：秋招网申助手" }).click();
   const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
   await expect(dialog).toBeVisible();
-  expect(await dialog.evaluate((node) => getComputedStyle(node).transform)).toBe("none");
+  const panel = dialog.locator(".case-dialog-panel");
+  await expect(panel).toBeVisible();
+  await expect.poll(() => panel.evaluate((node) => getComputedStyle(node).transform)).toBe("none");
 });

@@ -29,6 +29,9 @@ test("opens, deep-links, restores history, focus, and body scrolling", async ({ 
   await expect(page).toHaveURL(/\?project=job-application-helper$/);
   const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
   await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveJSProperty("tagName", "DIALOG");
+  await expect(dialog).toHaveJSProperty("open", true);
+  await expect(dialog).toHaveAttribute("open", "");
   await expect(page.getByRole("button", { name: "关闭秋招网申助手详情" })).toBeFocused();
   expect(await page.evaluate(() => getComputedStyle(document.body).overflow)).toBe("hidden");
   await page.goBack();
