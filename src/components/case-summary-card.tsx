@@ -1,19 +1,20 @@
 "use client";
 
-import Image from "next/image";
 import { animate, motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from "motion/react";
 import { useEffect, useRef } from "react";
 import { useFinePointer } from "@/components/motion/use-fine-pointer";
 import { usePrefersReducedMotion } from "@/components/motion/use-prefers-reduced-motion";
+import { ProjectImage } from "@/components/project-image";
 import type { ProjectCase } from "@/content/portfolio";
 
 export interface CaseSummaryCardProps {
   project: ProjectCase;
-  expanded: boolean;
-  onToggle: () => void;
+  priority?: boolean;
+  buttonRef?: React.Ref<HTMLButtonElement>;
+  onOpen: () => void;
 }
 
-export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCardProps) {
+export function CaseSummaryCard({ project, priority = false, buttonRef, onOpen }: CaseSummaryCardProps) {
   const cover = project.media.find((media) => !media.src.endsWith("icon.png")) ?? project.media[0];
   const reduce = usePrefersReducedMotion();
   const canTilt = useFinePointer();
@@ -21,10 +22,10 @@ export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCard
   const pointerY = useMotionValue(0.5);
   const hoverY = useMotionValue(0);
   const springConfig = { stiffness: 180, damping: 22, mass: 0.7 };
-  const springRotateX = useSpring(useTransform(pointerY, [0, 1], [3, -3]), springConfig);
-  const springRotateY = useSpring(useTransform(pointerX, [0, 1], [-3, 3]), springConfig);
-  const rotateX = useTransform(springRotateX, (value) => Math.max(-3, Math.min(3, value)));
-  const rotateY = useTransform(springRotateY, (value) => Math.max(-3, Math.min(3, value)));
+  const springRotateX = useSpring(useTransform(pointerY, [0, 1], [2, -2]), springConfig);
+  const springRotateY = useSpring(useTransform(pointerX, [0, 1], [-2, 2]), springConfig);
+  const rotateX = useTransform(springRotateX, (value) => Math.max(-2, Math.min(2, value)));
+  const rotateY = useTransform(springRotateY, (value) => Math.max(-2, Math.min(2, value)));
   const spotlightX = useTransform(pointerX, [0, 1], ["0%", "100%"]);
   const spotlightY = useTransform(pointerY, [0, 1], ["0%", "100%"]);
   const spotlight = useMotionTemplate`radial-gradient(220px circle at ${spotlightX} ${spotlightY}, rgb(49 95 219 / 0.14), transparent 70%)`;
@@ -50,7 +51,7 @@ export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCard
     if (!tiltEnabled || event.pointerType !== "mouse") return;
     bounds.current = event.currentTarget.getBoundingClientRect();
     hoverAnimation.current?.stop();
-    hoverAnimation.current = animate(hoverY, -4, { duration: 0.2, ease: "easeOut" });
+    hoverAnimation.current = animate(hoverY, -3, { duration: 0.2, ease: "easeOut" });
   }
 
   function handlePointerMove(event: React.PointerEvent<HTMLElement>) {
@@ -69,58 +70,39 @@ export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCard
   }
 
   return (
-    <motion.article
-      layout="position"
-      className={`case-card${expanded ? " is-expanded" : ""}`}
-      aria-labelledby={`${project.slug}-title`}
+    <motion.button
+      ref={buttonRef}
+      type="button"
+      className="case-card"
+      aria-label={`查看项目详情：${project.title}`}
       data-testid="case-summary-card"
       data-tilt={reduce ? "reduced" : canTilt ? "enabled" : "disabled"}
+      onClick={onOpen}
       onPointerEnter={handlePointerEnter}
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
       style={tiltEnabled ? { rotateX, rotateY, y: hoverY } : { transform: "none" }}
-      transition={{ type: "spring", stiffness: 180, damping: 22 }}
     >
-      <motion.div
+      <motion.span
         className="case-card-spotlight"
         aria-hidden="true"
         style={tiltEnabled
           ? { background: spotlight, pointerEvents: "none" }
           : { background: "none", pointerEvents: "none" }}
       />
-      <figure className="case-card-media">
-        <Image
-          src={cover.src}
-          alt={cover.alt}
-          width={cover.width}
-          height={cover.height}
-          sizes="(max-width: 767px) calc(100vw - 2rem), 40rem"
+      <span className="case-card-media">
+        <ProjectImage
+          media={cover}
+          priority={priority}
+          sizes="(max-width: 679px) calc(100vw - 2rem), (max-width: 1079px) 50vw, 27rem"
         />
-      </figure>
-      <div className="case-card-body">
-        <p className="case-descriptor">{project.descriptor}</p>
-        <h3 id={`${project.slug}-title`}>{project.title}</h3>
-        <p className="case-card-summary">{project.summary}</p>
-        <ul className="case-card-keywords" aria-label={`${project.title}能力关键词`}>
-          {project.highlights.slice(0, 3).map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-        <div className="case-card-actions">
-          <button
-            type="button"
-            aria-expanded={expanded}
-            aria-controls={`${project.slug}-detail`}
-            aria-label={`${expanded ? "收起详情" : "展开详情"}：${project.title}`}
-            onClick={onToggle}
-          >
-            {expanded ? "收起详情" : "展开详情"}
-          </button>
-          <a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer">
-            查看源码
-          </a>
-        </div>
-      </div>
-    </motion.article>
+      </span>
+      <span className="case-card-body">
+        <span className="case-descriptor">{project.descriptor}</span>
+        <span className="case-card-title">{project.title}</span>
+        <span className="case-card-summary">{project.summary}</span>
+        <span className="case-card-action">查看详情</span>
+      </span>
+    </motion.button>
   );
 }

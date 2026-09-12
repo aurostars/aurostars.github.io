@@ -76,8 +76,8 @@ function installMatchMedia({ fine = true, reduced = false } = {}) {
 }
 
 function renderCard() {
-  const onToggle = vi.fn();
-  render(<CaseSummaryCard project={portfolioCases[0]} expanded={false} onToggle={onToggle} />);
+  const onOpen = vi.fn();
+  render(<CaseSummaryCard project={portfolioCases[0]} onOpen={onOpen} />);
   const card = screen.getByTestId("case-summary-card");
   vi.spyOn(card, "getBoundingClientRect").mockReturnValue({
     left: 100,
@@ -90,7 +90,7 @@ function renderCard() {
     y: 50,
     toJSON: () => ({}),
   });
-  return { card, onToggle, spotlight: card.querySelector(".case-card-spotlight") as HTMLElement };
+  return { card, onOpen, spotlight: card.querySelector(".case-card-spotlight") as HTMLElement };
 }
 
 function readTransformNumber(card: HTMLElement, name: "rotateX" | "rotateY" | "translateY") {
@@ -142,7 +142,7 @@ afterEach(() => {
 describe("CaseSummaryCard pointer feedback", () => {
   it("updates real motion output for a fine mouse, clamps it, and returns to center on leave", async () => {
     installMatchMedia();
-    const { card, onToggle, spotlight } = renderCard();
+    const { card, onOpen, spotlight } = renderCard();
 
     fireEvent.pointerEnter(card, { pointerType: "mouse", isPrimary: true });
     fireEvent.pointerMove(card, { pointerType: "mouse", clientX: 500, clientY: -50 });
@@ -156,14 +156,14 @@ describe("CaseSummaryCard pointer feedback", () => {
         y: readTransformNumber(card, "translateY"),
       });
     });
-    expect(samples.every(({ rotateX }) => Math.abs(rotateX) <= 3)).toBe(true);
-    expect(samples.every(({ rotateY }) => Math.abs(rotateY) <= 3)).toBe(true);
-    expect(samples.every(({ y }) => Math.abs(y) <= 4)).toBe(true);
+    expect(samples.every(({ rotateX }) => Math.abs(rotateX) <= 2)).toBe(true);
+    expect(samples.every(({ rotateY }) => Math.abs(rotateY) <= 2)).toBe(true);
+    expect(samples.every(({ y }) => Math.abs(y) <= 3)).toBe(true);
     expect(spotlight.style.background).toContain("100% 0%");
     expect(spotlight.style.pointerEvents).toBe("none");
 
-    screen.getByRole("button", { name: /展开详情/ }).click();
-    expect(onToggle).toHaveBeenCalledOnce();
+    screen.getByRole("button", { name: /查看项目详情/ }).click();
+    expect(onOpen).toHaveBeenCalledOnce();
 
     fireEvent.pointerLeave(card, { pointerType: "mouse" });
     await waitFor(() => {
