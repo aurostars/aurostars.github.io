@@ -17,6 +17,7 @@ export function Reveal({ children, className, delay = 0, amount = 0.25 }: Reveal
   return (
     <motion.div
       className={className}
+      data-delay={delay}
       data-motion={reduce ? "reduced" : "enabled"}
       data-testid="reveal"
       data-viewport-once="true"

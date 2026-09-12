@@ -154,7 +154,7 @@ Hero 右栏教育与经历随后进入：
 
 ## 性能约束
 
-- 只动画 `transform` 与 `opacity`。
+- Motion 自动动效只动画 `transform` 与 `opacity`；不得通过 Motion 动画布局或颜色属性。B 方案允许 hover/focus 状态使用约 `200ms` 的 `color`、`background-color`、`border-color` CSS transition。
 - 不使用 React state 保存连续鼠标或滚动值。
 - 不使用 `window.addEventListener("scroll", ...)`。
 - `will-change` 只应用于当前悬停或正在进入的元素。

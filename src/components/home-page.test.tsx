@@ -87,15 +87,35 @@ describe("site shell", () => {
 });
 
 describe("home page", () => {
-  it("wires one-time reveal groups without changing semantic landmarks", () => {
+  it("keeps all four hero copy elements in ordered stagger items", () => {
     render(<Home />);
 
-    expect(screen.getByRole("heading", { level: 1, name: "认真体验，持续表达" })).toBeVisible();
-    expect(screen.getByRole("region", { name: "经历" })).toHaveAttribute("id", "experience");
-    expect(screen.getByRole("region", { name: "个人项目" })).toHaveAttribute("id", "cases");
-    expect(screen.getByRole("region", { name: "联系" })).toHaveAttribute("id", "contact");
-    expect(screen.getAllByTestId("stagger-group").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByTestId("reveal").length).toBeGreaterThanOrEqual(3);
+    const group = document.querySelector(".hero-copy-motion");
+    const items = within(group as HTMLElement).getAllByTestId("stagger-item");
+    expect(items).toHaveLength(4);
+    expect(items.map((item) => item.textContent)).toEqual([
+      "AI 产品经理",
+      "认真体验，持续表达",
+      "把 AI 能力接入真实工作流，用产品与数据持续验证价值。",
+      "查看项目",
+    ]);
+  });
+
+  it("stagger-reveals all five experience rows at 0.05 second intervals", () => {
+    render(<Home />);
+
+    const group = document.querySelector(".hero-experience-list");
+    expect(group).toHaveAttribute("data-stagger-children", "0.05");
+    expect(within(group as HTMLElement).getAllByTestId("stagger-item")).toHaveLength(5);
+    expect(within(group as HTMLElement).getAllByTestId("experience-row")).toHaveLength(5);
+  });
+
+  it("reveals project cards with delays increasing in global DOM order", () => {
+    render(<Home />);
+
+    const cards = Array.from(document.querySelectorAll(".case-card-motion"));
+    expect(cards.map((card) => card.getAttribute("data-delay"))).toEqual(["0", "0.06", "0.12", "0.18"]);
+    expect(cards.every((card) => card.parentElement?.classList.contains("case-row"))).toBe(true);
   });
 
   it("renders the personal statement and profile index in the hero", () => {

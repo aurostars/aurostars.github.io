@@ -20,6 +20,7 @@ export function StaggerGroup({
     <motion.div
       className={className}
       data-motion={reduce ? "reduced" : "enabled"}
+      data-stagger-children={staggerChildren}
       data-testid="stagger-group"
       initial={reduce ? false : "hidden"}
       whileInView="visible"
@@ -39,6 +40,7 @@ export function StaggerItem({ children, className }: MotionChildrenProps) {
   return (
     <motion.div
       className={className}
+      data-testid="stagger-item"
       initial={reduce ? false : undefined}
       variants={{
         hidden: reduce ? {} : { opacity: 0, y: 20 },

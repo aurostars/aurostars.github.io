@@ -14,7 +14,7 @@
 - 只使用 `motion/react`；不引入 GSAP、Three.js 或第二套动画库。
 - 连续鼠标值必须使用 `useMotionValue` / `useSpring` / `useTransform`，不得写入 React state。
 - 禁止 `window.addEventListener("scroll", ...)` 和自定义 `window.scrollY` 计算。
-- 只动画 `transform` 与 `opacity`，不得动画 `top`、`left`、`width`、`height`。
+- Motion 自动动效只动画 `transform` 与 `opacity`，不得通过 Motion 动画 `top`、`left`、`width`、`height` 或颜色属性；B 方案允许 hover/focus 状态使用约 `200ms` 的 `color`、`background-color`、`border-color` CSS transition。
 - 项目卡片倾斜最大 `3deg`，悬停上移最大 `4px`，只在精细指针设备启用。
 - 所有自动动效必须遵守 `prefers-reduced-motion`；reduced motion 下直接渲染最终状态并停用倾斜与高光。
 - 不制作自定义鼠标指针、视差背景、滚动劫持、横向滚动、无限 marquee 或循环动画。
