@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -37,6 +37,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -186,17 +187,37 @@ describe("home page", () => {
     expect(screen.queryByRole("region", { name: /案例详情/ })).not.toBeInTheDocument();
   });
 
-  it("removes the previous detail when switching projects with presence enabled", async () => {
-    const user = userEvent.setup();
+  it("keeps the outgoing detail until its non-reduced exit completes, then leaves the new detail", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes("pointer: fine"),
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })));
     render(<Home />);
 
     const toggles = screen.getAllByRole("button", { name: /展开详情/ });
-    await user.click(toggles[0]);
-    expect(screen.getAllByRole("region", { name: /案例详情/ })).toHaveLength(1);
-    await user.click(toggles[1]);
-    await waitFor(() => {
-      expect(screen.getAllByRole("region", { name: /案例详情/ })).toHaveLength(1);
+    fireEvent.click(toggles[0]);
+    await act(async () => {
+      await vi.runAllTimersAsync();
     });
+
+    fireEvent.click(toggles[1]);
+    expect(screen.getByRole("region", { name: "秋招网申助手案例详情" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "面试复盘助手案例详情" })).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+    expect(screen.queryByRole("region", { name: "秋招网申助手案例详情" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("region", { name: /案例详情/ })).toEqual([
+      screen.getByRole("region", { name: "面试复盘助手案例详情" }),
+    ]);
   });
 
   it("keeps the complete verified case contract inside the expanded detail", async () => {

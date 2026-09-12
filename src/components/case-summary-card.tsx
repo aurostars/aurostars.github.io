@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
+import { animate, motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
+import { useEffect, useRef } from "react";
 import { useFinePointer } from "@/components/motion/use-fine-pointer";
 import type { ProjectCase } from "@/content/portfolio";
 
@@ -14,26 +15,53 @@ export interface CaseSummaryCardProps {
 export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCardProps) {
   const cover = project.media.find((media) => !media.src.endsWith("icon.png")) ?? project.media[0];
   const reduce = useReducedMotion();
+  const canTilt = useFinePointer();
   const pointerX = useMotionValue(0.5);
   const pointerY = useMotionValue(0.5);
+  const hoverY = useMotionValue(0);
   const springConfig = { stiffness: 180, damping: 22, mass: 0.7 };
-  const rotateX = useSpring(useTransform(pointerY, [0, 1], [3, -3]), springConfig);
-  const rotateY = useSpring(useTransform(pointerX, [0, 1], [-3, 3]), springConfig);
+  const springRotateX = useSpring(useTransform(pointerY, [0, 1], [3, -3]), springConfig);
+  const springRotateY = useSpring(useTransform(pointerX, [0, 1], [-3, 3]), springConfig);
+  const rotateX = useTransform(springRotateX, (value) => Math.max(-3, Math.min(3, value)));
+  const rotateY = useTransform(springRotateY, (value) => Math.max(-3, Math.min(3, value)));
   const spotlightX = useTransform(pointerX, [0, 1], ["0%", "100%"]);
   const spotlightY = useTransform(pointerY, [0, 1], ["0%", "100%"]);
   const spotlight = useMotionTemplate`radial-gradient(220px circle at ${spotlightX} ${spotlightY}, rgb(49 95 219 / 0.14), transparent 70%)`;
-  const canTilt = useFinePointer();
+  const bounds = useRef<DOMRect | null>(null);
+  const hoverAnimation = useRef<ReturnType<typeof animate> | null>(null);
+  const tiltEnabled = canTilt && !reduce;
+
+  useEffect(() => {
+    if (tiltEnabled) return;
+    bounds.current = null;
+    pointerX.set(0.5);
+    pointerY.set(0.5);
+    springRotateX.jump(0);
+    springRotateY.jump(0);
+    hoverAnimation.current?.stop();
+    hoverY.set(0);
+  }, [hoverY, pointerX, pointerY, springRotateX, springRotateY, tiltEnabled]);
+
+  function handlePointerEnter(event: React.PointerEvent<HTMLElement>) {
+    if (!tiltEnabled || event.pointerType !== "mouse") return;
+    bounds.current = event.currentTarget.getBoundingClientRect();
+    hoverAnimation.current?.stop();
+    hoverAnimation.current = animate(hoverY, -4, { duration: 0.2, ease: "easeOut" });
+  }
 
   function handlePointerMove(event: React.PointerEvent<HTMLElement>) {
-    if (reduce || !canTilt || event.pointerType !== "mouse") return;
-    const rect = event.currentTarget.getBoundingClientRect();
+    if (!tiltEnabled || event.pointerType !== "mouse") return;
+    const rect = bounds.current ?? event.currentTarget.getBoundingClientRect();
     pointerX.set((event.clientX - rect.left) / rect.width);
     pointerY.set((event.clientY - rect.top) / rect.height);
   }
 
   function resetPointer() {
+    bounds.current = null;
     pointerX.set(0.5);
     pointerY.set(0.5);
+    hoverAnimation.current?.stop();
+    hoverAnimation.current = animate(hoverY, 0, { duration: 0.2, ease: "easeOut" });
   }
 
   return (
@@ -43,16 +71,16 @@ export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCard
       aria-labelledby={`${project.slug}-title`}
       data-testid="case-summary-card"
       data-tilt={reduce ? "reduced" : canTilt ? "enabled" : "disabled"}
+      onPointerEnter={handlePointerEnter}
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
-      style={reduce ? undefined : { rotateX, rotateY }}
-      whileHover={reduce ? undefined : { y: -4 }}
+      style={tiltEnabled ? { rotateX, rotateY, y: hoverY } : { transform: "none" }}
       transition={{ type: "spring", stiffness: 180, damping: 22 }}
     >
       <motion.div
         className="case-card-spotlight"
         aria-hidden="true"
-        style={reduce ? undefined : { background: spotlight }}
+        style={tiltEnabled ? { background: spotlight } : { background: "none" }}
       />
       <figure className="case-card-media">
         <Image
