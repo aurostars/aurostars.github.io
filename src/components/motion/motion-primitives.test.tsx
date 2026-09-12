@@ -69,6 +69,12 @@ describe("motion primitives", () => {
     );
   });
 
+  it("does not pin a standalone StaggerItem to hidden when motion is enabled", () => {
+    render(<StaggerItem><span>独立 Item</span></StaggerItem>);
+
+    expect(screen.getByText("独立 Item").parentElement).not.toHaveAttribute("data-initial");
+  });
+
   it("renders StaggerItem in its final position without delay for reduced motion", () => {
     reducedMotion.value = true;
     render(<StaggerItem><span>静态 Item</span></StaggerItem>);
