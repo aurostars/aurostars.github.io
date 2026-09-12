@@ -8,7 +8,6 @@ export default function Home() {
     <>
       <IdentityBar
         name="董星"
-        role="AI 产品经理与独立开发者"
         email={contact.email}
         github={contact.github}
       />

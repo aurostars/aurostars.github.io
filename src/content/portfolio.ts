@@ -11,7 +11,7 @@ export interface ProjectMedia {
   height: number;
 }
 
-export interface CompanyLogo extends ProjectMedia {}
+export type CompanyLogo = ProjectMedia;
 
 export interface ProjectCase {
   slug: ProjectSlug;

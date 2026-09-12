@@ -45,7 +45,7 @@ afterEach(() => {
 import RootLayout, { metadata } from "@/app/layout";
 import Home from "@/app/page";
 import { FeaturedCases } from "@/components/featured-cases";
-import { portfolioCases, type ProjectCase } from "@/content/portfolio";
+import { contact, experiences, portfolioCases, type ProjectCase } from "@/content/portfolio";
 
 function makeProjectFixtures(count: number): ProjectCase[] {
   return Array.from({ length: count }, (_, index) => ({
@@ -77,15 +77,15 @@ describe("site shell", () => {
 });
 
 describe("home page", () => {
-  it("renders a compact identity bar without the removed hero statement", () => {
+  it("renders only the name, email, and GitHub in the compact identity bar", () => {
     render(<Home />);
     const identity = screen.getByRole("region", { name: "个人信息" });
     expect(within(identity).getByRole("heading", { level: 1, name: "董星" })).toBeInTheDocument();
-    expect(within(identity).getByText("AI 产品经理与独立开发者")).toBeInTheDocument();
-    expect(within(identity).getByRole("link", { name: "dongxing.123@bytedance.com" })).toHaveAttribute("href", "mailto:dongxing.123@bytedance.com");
+    expect(within(identity).getByRole("link", { name: contact.email })).toHaveAttribute("href", `mailto:${contact.email}`);
     expect(within(identity).getByRole("link", { name: "访问 GitHub（新窗口）" })).toHaveAttribute("href", "https://github.com/aurostars");
-    expect(screen.queryByText("认真体验，持续表达")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "查看项目" })).not.toBeInTheDocument();
+    expect(screen.queryByText("AI 产品经理与独立开发者")).not.toBeInTheDocument();
+    expect(screen.queryByText("保持好奇，终身学习")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /头像/ })).not.toBeInTheDocument();
   });
 
   it("renders schools, simplified majors, degrees, and semantic education dates", () => {
@@ -99,7 +99,16 @@ describe("home page", () => {
     expect(educationRows[1]).toHaveTextContent("中国人民大学经济学学士2020-2024");
     expect(educationRows[1].querySelector("time")).toHaveTextContent("2020-2024");
     expect(within(history).queryByText(/理论经济学|应用经济学/)).not.toBeInTheDocument();
-    expect(within(history).getAllByTestId("experience-row")).toHaveLength(5);
+    expect(history.querySelector(".profile-history-motion")).toBeInTheDocument();
+    const experienceRows = within(history).getAllByTestId("experience-row");
+    expect(experienceRows).toHaveLength(6);
+    expect(within(experienceRows[0]).getByText("2026.07 - 至今")).toBeInTheDocument();
+    expect(within(experienceRows[0]).getByText("字节跳动")).toBeInTheDocument();
+    expect(within(experienceRows[0]).getByText("AI 产品经理")).toBeInTheDocument();
+    expect(within(experienceRows[0]).getByText("企业 Agent 和团队数字员工的搭建与迭代")).toBeInTheDocument();
+    for (const item of experiences) {
+      expect(within(history).getByRole("img", { name: item.logo.alt })).toBeInTheDocument();
+    }
   });
 
   it("labels the project section without the removed helper copy", () => {
@@ -128,9 +137,9 @@ describe("home page", () => {
   it("uses a non-icon product screenshot and preserves image metadata", () => {
     render(<FeaturedCases projects={portfolioCases} />);
     const trigger = screen.getByRole("button", { name: "查看项目详情：秋招网申助手" });
-    const image = within(trigger).getByRole("img", { name: "秋招网申助手的多简历资料管理界面" });
-    expect(image).toHaveAttribute("width", "1920");
-    expect(image).toHaveAttribute("height", "1563");
+    const image = within(trigger).getByRole("img", { name: "秋招网申助手点击扩展后打开的界面" });
+    expect(image).toHaveAttribute("width", "1600");
+    expect(image).toHaveAttribute("height", "900");
   });
 
   it("renders exactly one case card per project and no future placeholders", () => {

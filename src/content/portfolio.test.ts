@@ -125,7 +125,14 @@ describe("portfolio content", () => {
   });
 
   it("adds ByteDance first and keeps all six experiences with local logo metadata", () => {
-    expect(experiences.map(({ logo: _logo, ...facts }) => facts)).toEqual(expectedExperienceFacts);
+    expect(
+      experiences.map(({ period, organization, role, highlight }) => ({
+        period,
+        organization,
+        role,
+        highlight,
+      })),
+    ).toEqual(expectedExperienceFacts);
     expect(experiences[0].logo).toEqual({
       src: "/companies/bytedance.svg",
       alt: "字节跳动 Logo",

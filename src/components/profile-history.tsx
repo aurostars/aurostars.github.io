@@ -1,3 +1,4 @@
+import { CompanyLogo } from "@/components/company-logo";
 import { Reveal } from "@/components/motion/reveal";
 import type { EducationItem, ExperienceItem } from "@/content/portfolio";
 
@@ -32,10 +33,17 @@ export function ProfileHistory({ education, experiences }: ProfileHistoryProps) 
           <ol className="experience-list">
             {experiences.map((item) => (
               <li data-testid="experience-row" key={`${item.organization}-${item.period}`}>
-                <time><span className="mobile-field-label">时间</span>{item.period}</time>
-                <p><span className="mobile-field-label">公司</span><strong>{item.organization}</strong></p>
-                <p><span className="mobile-field-label">岗位</span>{item.role}</p>
-                <p><span className="mobile-field-label">职责</span>{item.highlight}</p>
+                <div className="company-logo-slot">
+                  <CompanyLogo logo={item.logo} />
+                </div>
+                <div className="experience-content">
+                  <div className="experience-heading">
+                    <strong>{item.organization}</strong>
+                    <time>{item.period}</time>
+                  </div>
+                  <p className="experience-role">{item.role}</p>
+                  <p className="experience-highlight">{item.highlight}</p>
+                </div>
               </li>
             ))}
           </ol>
