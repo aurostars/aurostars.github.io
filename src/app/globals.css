@@ -236,6 +236,59 @@ button:focus-visible {
   font-weight: 700;
 }
 
+.case-dialog {
+  width: min(76vw, 1100px);
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 0;
+  border-radius: 1.25rem;
+  background: transparent;
+  color: inherit;
+  overflow: hidden;
+}
+
+.case-dialog::backdrop {
+  background: rgb(15 23 42 / 0.5);
+  backdrop-filter: blur(6px);
+}
+
+.case-dialog-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  max-height: calc(100dvh - 48px);
+  background: var(--color-surface);
+}
+
+.case-dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.case-dialog-header h2 {
+  margin: 0;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.case-dialog-header button {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+
+.case-dialog-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .case-detail-links {
   display: flex;
   flex-wrap: wrap;
@@ -255,13 +308,8 @@ button:focus-visible {
 
 .case-detail {
   display: grid;
-  grid-column: 1 / -1;
-  grid-row: 2;
   gap: 2rem;
   padding: clamp(1.5rem, 3vw, 2.5rem);
-  border: 1px solid var(--color-border);
-  border-radius: 1rem;
-  background: var(--color-surface);
 }
 
 .case-detail figure {
@@ -417,6 +465,24 @@ button:focus-visible {
 }
 
 @media (max-width: 679px) {
+  .case-dialog {
+    width: calc(100% - 16px);
+    max-height: calc(100dvh - 16px);
+    border-radius: 1rem;
+  }
+
+  .case-dialog-panel {
+    max-height: calc(100dvh - 16px);
+  }
+
+  .case-dialog-header {
+    padding: calc(0.75rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right)) 0.75rem calc(1rem + env(safe-area-inset-left));
+  }
+
+  .case-dialog-scroll {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
   .cases-section {
     width: 100%;
     padding: 3.5rem 1rem;
@@ -428,10 +494,6 @@ button:focus-visible {
 
   .case-card-summary {
     -webkit-line-clamp: 3;
-  }
-
-  .case-detail {
-    width: 100%;
   }
 
   .case-gallery,
