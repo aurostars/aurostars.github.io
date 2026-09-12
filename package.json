@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:browser:reduced": "playwright test tests/browser/reduced-motion-css.spec.ts",
+    "test:browser:portfolio": "playwright test tests/browser/compact-portfolio.spec.ts",
     "test:watch": "vitest"
   },
   "dependencies": {

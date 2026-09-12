@@ -4,7 +4,8 @@ test("reduced motion keeps offscreen reveal and stagger content visible without 
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/", { waitUntil: "networkidle" });
-  await expect(page.locator("[data-motion]")).toHaveCount(9);
+  await expect(page.getByRole("heading", { name: "董星" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "个人项目" })).toBeVisible();
   expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
 
   const affectedNodes = page.locator('[data-motion], [data-motion] [data-testid="stagger-item"]');
@@ -18,4 +19,9 @@ test("reduced motion keeps offscreen reveal and stagger content visible without 
   expect(styles.some(({ top }) => top > 844)).toBe(true);
   expect(styles.filter(({ opacity }) => opacity !== "1")).toEqual([]);
   expect(styles.filter(({ transform }) => transform !== "none")).toEqual([]);
+
+  await page.getByRole("button", { name: "查看项目详情：秋招网申助手" }).click();
+  const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
+  await expect(dialog).toBeVisible();
+  expect(await dialog.evaluate((node) => getComputedStyle(node).transform)).toBe("none");
 });
