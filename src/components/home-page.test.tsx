@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -9,6 +10,7 @@ vi.mock("geist/font/sans", () => ({
 }));
 
 beforeEach(() => {
+  history.replaceState({}, "", "/");
   vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
     matches: query.includes("prefers-reduced-motion"),
     media: query,
@@ -36,6 +38,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
@@ -129,6 +132,51 @@ describe("home page", () => {
     const { container } = render(<Home />);
     expect(container.querySelectorAll(".case-card")).toHaveLength(4);
     expect(screen.queryByText(/未来案例|待添加/)).not.toBeInTheDocument();
+  });
+
+  it("opens exactly one labelled dialog and writes the project query", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+    await user.click(screen.getByRole("button", { name: "查看项目详情：秋招网申助手" }));
+    expect(screen.getAllByRole("dialog")).toHaveLength(1);
+    expect(screen.getByRole("dialog", { name: "秋招网申助手" })).toBeInTheDocument();
+    expect(location.search).toBe("?project=job-application-helper");
+  });
+
+  it("keeps the complete verified content and source links inside the dialog", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+    await user.click(screen.getByRole("button", { name: "查看项目详情：智能简历编辑工具" }));
+    const dialog = within(screen.getByRole("dialog", { name: "智能简历编辑工具" }));
+    expect(dialog.getByText(portfolioCases[2].background)).toBeInTheDocument();
+    expect(dialog.getAllByTestId("workflow-step")).toHaveLength(5);
+    expect(dialog.getByRole("link", { name: /查看智能简历编辑工具源码.*新窗口/ })).toHaveAttribute("target", "_blank");
+    expect(dialog.getByRole("link", { name: /查看上游项目.*新窗口/ })).toHaveAttribute("target", "_blank");
+    expect(dialog.getByText(/JOYCEQL\/magic-resume/)).toBeInTheDocument();
+  });
+
+  it("restores focus to the originating project card after close", async () => {
+    const user = userEvent.setup();
+    const back = vi.spyOn(history, "back").mockImplementation(() => {
+      history.replaceState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    render(<Home />);
+    const trigger = screen.getByRole("button", { name: "查看项目详情：面试复盘助手" });
+    await user.click(trigger);
+    await user.click(screen.getByRole("button", { name: "关闭面试复盘助手详情" }));
+    expect(back).toHaveBeenCalledOnce();
+    expect(trigger).toHaveFocus();
+  });
+
+  it("opens a valid deep link and falls back to the project heading on close", async () => {
+    history.replaceState({}, "", "/?project=meeting-minutes");
+    const user = userEvent.setup();
+    render(<Home />);
+    expect(screen.getByRole("dialog", { name: "智能会议纪要工具" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "关闭智能会议纪要工具详情" }));
+    expect(screen.getByRole("heading", { level: 2, name: "个人项目" })).toHaveFocus();
+    expect(location.search).toBe("");
   });
 
   it("ships the social preview image referenced by metadata", () => {

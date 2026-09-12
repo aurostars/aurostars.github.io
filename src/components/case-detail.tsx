@@ -20,16 +20,16 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
     <div className="case-detail">
       <div className="case-detail-links" aria-label={`${project.title}项目链接`}>
         <a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer">
-          查看{project.title}源码
+          查看{project.title}源码<span className="sr-only">（新窗口）</span>
         </a>
         {project.releaseUrl ? (
           <a href={project.releaseUrl} target="_blank" rel="noopener noreferrer">
-            下载版本
+            下载版本<span className="sr-only">（新窗口）</span>
           </a>
         ) : null}
         {project.slug === "resume-builder" ? (
           <a href={resumeBuilderUpstream} target="_blank" rel="noopener noreferrer">
-            查看上游项目
+            查看上游项目<span className="sr-only">（新窗口）</span>
           </a>
         ) : null}
       </div>

@@ -1,17 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { CaseDialog } from "@/components/case-dialog";
 import { Reveal } from "@/components/motion/reveal";
+import { useProjectDialogState } from "@/components/use-project-dialog-state";
 import type { ProjectCase } from "@/content/portfolio";
 import { CaseSummaryCard } from "./case-summary-card";
 
 export function FeaturedCases({ projects }: { projects: ProjectCase[] }) {
-  const [, setSelectedSlug] = useState<ProjectCase["slug"] | null>(null);
+  const { selectedProject, openProject, closeProject } = useProjectDialogState(projects);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const triggerRefs = useRef(new Map<ProjectCase["slug"], HTMLButtonElement>());
+  const [returnFocusTo, setReturnFocusTo] = useState<HTMLElement | null>(null);
+
+  function handleOpen(project: ProjectCase) {
+    setReturnFocusTo(triggerRefs.current.get(project.slug) ?? null);
+    openProject(project.slug);
+  }
 
   return (
     <section className="cases-section site-container" id="cases" aria-labelledby="cases-title">
       <Reveal className="section-heading compact-heading">
-        <h2 id="cases-title">个人项目</h2>
+        <h2 ref={headingRef} id="cases-title" tabIndex={-1}>个人项目</h2>
       </Reveal>
       <div className="case-grid" data-project-count={projects.length}>
         {projects.map((project, index) => (
@@ -19,11 +29,21 @@ export function FeaturedCases({ projects }: { projects: ProjectCase[] }) {
             <CaseSummaryCard
               project={project}
               priority={index < 3}
-              onOpen={() => setSelectedSlug(project.slug)}
+              buttonRef={(button) => {
+                if (button) triggerRefs.current.set(project.slug, button);
+                else triggerRefs.current.delete(project.slug);
+              }}
+              onOpen={() => handleOpen(project)}
             />
           </Reveal>
         ))}
       </div>
+      <CaseDialog
+        project={selectedProject}
+        onClose={closeProject}
+        returnFocusTo={returnFocusTo}
+        fallbackFocusRef={headingRef}
+      />
     </section>
   );
 }
