@@ -60,10 +60,18 @@
 - 修复：将同步读取替换为 `expect.poll` 等待可观察的 scroll-lock 状态；未添加 retry、固定 sleep 或生产代码改动。
 - 重复验证：受影响测试连续运行 3 次，均为 1/1 通过；完整 portfolio 浏览器套件连续运行 3 次，均为 21/21 通过。
 
+### Scoped re-review：dialog 生命周期断言全量审计
+
+- 审计 `compact-portfolio.spec.ts` 中 body overflow/padding、dialog open/close 与焦点恢复断言。`toBeVisible`、`toBeHidden`、`toHaveJSProperty`、`toHaveAttribute`、`toBeFocused` 均为 Playwright 自动等待断言，因此保留；键盘事件后读取 `dialog.contains(document.activeElement)` 验证的是同步焦点转移，也无需轮询。
+- Review 证据指出 `opens, deep-links...` 中同步读取 computed body overflow 仍可能先于 React scroll-lock effect；本地修复前连续 5 次 focused sampling 均通过，未能稳定复现，但同步读取确有同类时序窗口。
+- 修复两处真正异步的 body 生命周期读取：打开后的 computed overflow，以及退出后恢复的 inline overflow/padding，均改用 `expect.poll`；未添加 retry、固定 sleep 或生产代码改动。
+- 修复后 affected tests 2/2 通过；完整 portfolio 浏览器套件连续 5 次均为 21/21 通过（共 105 项，无失败）。
+
 ## 最终验证
 
 - `npm test -- src/components/case-dialog.test.tsx`：退出码 0；10/10 测试通过，原生 dialog、初始焦点、单次 cancel、关闭按钮、遮罩关闭、退出生命周期、项目切换、焦点恢复与滚动锁定均保持。
-- `npm run test:browser:portfolio`：退出码 0；21/21 Chromium 测试通过；每次测试前生产构建成功。
+- `npm run test:browser:portfolio -- --grep "native dialog traps focus|opens, deep-links" --reporter=dot`：退出码 0；受影响测试 2/2 通过。
+- `npm run test:browser:portfolio -- --reporter=dot` 连续运行 5 次：每次均退出码 0、21/21 Chromium 测试通过（共 105/105）；每次测试前生产构建成功。
 - `npm run test:browser:reduced`：退出码 0；1/1 测试通过，Reduced Motion 下 panel computed transform 为 `none`。
 - `npm test`：退出码 0；10/10 测试文件、60/60 测试通过。
 - `npm run lint`：退出码 0。

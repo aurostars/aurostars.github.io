@@ -155,7 +155,7 @@ test("native dialog traps focus, Escape closes once, restores body styles, and f
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   await expect(page).toHaveURL(/\/$/);
-  expect(await page.evaluate(() => ({
+  await expect.poll(() => page.evaluate(() => ({
     overflow: document.body.style.overflow,
     paddingRight: document.body.style.paddingRight,
   }))).toEqual({ overflow: "clip", paddingRight: "7px" });
@@ -193,7 +193,7 @@ test("opens, deep-links, restores history, focus, and body scrolling", async ({ 
   await expect(dialog).toHaveJSProperty("open", true);
   await expect(dialog).toHaveAttribute("open", "");
   await expect(page.getByRole("button", { name: "关闭秋招网申助手详情" })).toBeFocused();
-  expect(await page.evaluate(() => getComputedStyle(document.body).overflow)).toBe("hidden");
+  await expect.poll(() => page.evaluate(() => getComputedStyle(document.body).overflow)).toBe("hidden");
   await page.goBack();
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
