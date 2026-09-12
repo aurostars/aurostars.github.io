@@ -4,9 +4,29 @@ const viewports = [
   { width: 1440, height: 900, columns: 3 },
   { width: 1024, height: 768, columns: 2 },
   { width: 768, height: 900, columns: 2 },
+  { width: 767, height: 900, columns: 2 },
   { width: 390, height: 844, columns: 1 },
   { width: 320, height: 800, columns: 1 },
 ];
+
+function parseColor(value: string) {
+  const channels = value.match(/[\d.]+/g)?.map(Number) ?? [];
+  return {
+    rgb: channels.slice(0, 3),
+    alpha: channels[3] ?? 1,
+  };
+}
+
+function contrastRatio(foreground: string, background: string) {
+  const luminance = (channels: number[]) => channels
+    .map((channel) => channel / 255)
+    .map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+    .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+  const foregroundLuminance = luminance(parseColor(foreground).rgb);
+  const backgroundLuminance = luminance(parseColor(background).rgb);
+  return (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
+    / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
+}
 
 async function injectProjectFixtures(page: Page, count: 5 | 6) {
   await page.locator(".case-grid").evaluate((grid, targetCount) => {
@@ -22,23 +42,121 @@ async function injectProjectFixtures(page: Page, count: 5 | 6) {
   }, count);
 }
 
-test("dark mode skip link keeps accessible contrast against the accent surface", async ({ page }) => {
+test("dark theme keeps focused navigation, text, focus ring, and glass surfaces readable", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/", { waitUntil: "networkidle" });
 
-  const contrast = await page.locator(".skip-link").evaluate((element) => {
-    const parseRgb = (value: string) => value.match(/[\d.]+/g)!.slice(0, 3).map(Number);
-    const luminance = (channels: number[]) => channels
-      .map((channel) => channel / 255)
-      .map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
-      .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+  const skipLink = page.locator(".skip-link");
+  await skipLink.focus();
+  await expect(skipLink).toBeFocused();
+  const skipStyle = await skipLink.evaluate((element) => {
     const style = getComputedStyle(element);
-    const foreground = luminance(parseRgb(style.color));
-    const background = luminance(parseRgb(style.backgroundColor));
-    return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05);
+    return { color: style.color, backgroundColor: style.backgroundColor };
   });
+  expect(contrastRatio(skipStyle.color, skipStyle.backgroundColor)).toBeGreaterThanOrEqual(4.5);
 
-  expect(contrast).toBeGreaterThanOrEqual(4.5);
+  const card = page.getByRole("button", { name: "查看项目详情：秋招网申助手" });
+  await card.focus();
+  await expect(card).toBeFocused();
+  const styles = await page.evaluate(() => {
+    const computed = (selector: string) => getComputedStyle(document.querySelector(selector)!);
+    return {
+      body: computed("body"),
+      identity: computed(".identity-bar-motion"),
+      history: computed(".profile-history-motion"),
+      card: computed(".case-card"),
+      summary: computed(".case-card-summary"),
+      detail: computed(".experience-highlight"),
+    };
+  }).then((result) => ({
+    body: { color: result.body.color, backgroundColor: result.body.backgroundColor },
+    identity: { backgroundColor: result.identity.backgroundColor },
+    history: { backgroundColor: result.history.backgroundColor },
+    card: { backgroundColor: result.card.backgroundColor, outlineColor: result.card.outlineColor },
+    summary: { color: result.summary.color },
+    detail: { color: result.detail.color },
+  }));
+
+  expect(parseColor(styles.body.backgroundColor).alpha).toBe(1);
+  expect(parseColor(styles.identity.backgroundColor).alpha).toBeGreaterThanOrEqual(0.8);
+  expect(parseColor(styles.history.backgroundColor).alpha).toBeGreaterThanOrEqual(0.8);
+  expect(parseColor(styles.card.backgroundColor).alpha).toBe(1);
+  expect(contrastRatio(styles.body.color, styles.body.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+  expect(contrastRatio(styles.summary.color, styles.card.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+  expect(contrastRatio(styles.detail.color, styles.history.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+  expect(parseColor(styles.card.outlineColor).alpha).toBe(1);
+  expect(contrastRatio(styles.card.outlineColor, styles.card.backgroundColor)).toBeGreaterThanOrEqual(3);
+});
+
+for (const viewport of viewports) {
+  test(`${viewport.width}px keeps profile history and project layout inside the viewport`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const education = page.getByRole("region", { name: "教育经历", exact: true });
+    const internship = page.getByRole("region", { name: "实习经历", exact: true });
+    const [educationBox, internshipBox] = await Promise.all([
+      education.boundingBox(),
+      internship.boundingBox(),
+    ]);
+    expect(educationBox).not.toBeNull();
+    expect(internshipBox).not.toBeNull();
+
+    if (viewport.width >= 768) {
+      expect(Math.abs(educationBox!.y - internshipBox!.y)).toBeLessThanOrEqual(1);
+      expect(educationBox!.x + educationBox!.width).toBeLessThanOrEqual(internshipBox!.x);
+    } else {
+      expect(internshipBox!.y).toBeGreaterThanOrEqual(educationBox!.y + educationBox!.height);
+    }
+
+    const hint = page.locator("#cases-hint");
+    const hintBox = await hint.boundingBox();
+    expect(hintBox).not.toBeNull();
+    expect(hintBox!.x).toBeGreaterThanOrEqual(0);
+    expect(hintBox!.x + hintBox!.width).toBeLessThanOrEqual(viewport.width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+  });
+}
+
+test("company logo network failure keeps its slot, company name, and experience row stable", async ({ page }) => {
+  let failedRequest = false;
+  await page.route("**/companies/bytedance.svg", async (route) => {
+    failedRequest = true;
+    await route.abort("failed");
+  });
+  await page.goto("/", { waitUntil: "networkidle" });
+
+  const row = page.getByTestId("experience-row").first();
+  const slot = row.locator(".company-logo-slot");
+  await expect.poll(() => failedRequest).toBe(true);
+  await expect(row.getByText("字节跳动")).toBeVisible();
+  await expect(row.getByRole("img", { name: "字节跳动 Logo" })).toHaveCount(0);
+  const [rowBox, slotBox] = await Promise.all([row.boundingBox(), slot.boundingBox()]);
+  expect(rowBox).not.toBeNull();
+  expect(slotBox).not.toBeNull();
+  expect(rowBox!.height).toBeGreaterThan(0);
+  expect(slotBox!.width).toBeGreaterThan(0);
+  expect(slotBox!.height).toBeGreaterThan(0);
+});
+
+test("company logos load in original color and fit their fixed slots without cropping", async ({ page }) => {
+  await page.goto("/", { waitUntil: "networkidle" });
+  const logo = page.getByRole("img", { name: "字节跳动 Logo" });
+  await expect(logo).toBeVisible();
+  const imageState = await logo.evaluate((element) => {
+    const image = element as HTMLImageElement;
+    const style = getComputedStyle(image);
+    return {
+      complete: image.complete,
+      naturalWidth: image.naturalWidth,
+      objectFit: style.objectFit,
+      filter: style.filter,
+    };
+  });
+  expect(imageState.complete).toBe(true);
+  expect(imageState.naturalWidth).toBeGreaterThan(0);
+  expect(imageState.objectFit).toBe("contain");
+  expect(imageState.filter).toBe("none");
 });
 
 test("project instruction stays adjacent to its heading and wraps without mobile overflow", async ({ page }) => {
@@ -92,13 +210,24 @@ for (const viewport of viewports) {
   }
 }
 
-test("detail gallery preserves complete product screenshots", async ({ page }) => {
+test("detail gallery preserves the two approved Job Application Helper screenshots, features, and source link", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
-  const galleryImages = page.locator(".case-gallery img");
+  const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
+  const gallery = dialog.getByRole("group", { name: "秋招网申助手真实产品界面" });
+  const galleryImages = gallery.getByRole("img");
   await expect(galleryImages).toHaveCount(2);
-  await expect(galleryImages.first()).toHaveCSS("object-fit", "contain");
-  await expect(galleryImages.nth(1)).toHaveCSS("object-fit", "contain");
+  await expect(gallery.getByRole("img", { name: "秋招网申助手点击扩展后打开的界面" })).toHaveCSS("object-fit", "contain");
+  await expect(gallery.getByRole("img", { name: "秋招网申助手的个人信息设置页面" })).toHaveCSS("object-fit", "contain");
+
+  const features = dialog.getByRole("region", { name: "已实现功能" }).getByRole("listitem");
+  await expect(features).toHaveCount(10);
+  await expect(features.first()).toHaveText("求职资料集中管理。");
+  await expect(features.last()).toHaveText("版本化 JSON 备份与 WebDAV 双向同步。");
+  const links = dialog.getByRole("link");
+  await expect(links).toHaveCount(1);
+  await expect(links.first()).toHaveAccessibleName(/查看源码\s*（新窗口）/);
+  await expect(links.first()).toHaveAttribute("href", "https://github.com/aurostars/Job-Application-Helper");
 
   await page.goto("/?project=resume-builder", { waitUntil: "networkidle" });
   await expect(page.locator(".case-gallery img").first()).toHaveCSS("object-fit", "contain");
@@ -110,6 +239,13 @@ test("detail image failure keeps a stable 16:9 frame", async ({ page }) => {
   await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
   const gallery = page.getByRole("group", { name: "秋招网申助手真实产品界面" });
   await expect(gallery.getByRole("img", { name: "秋招网申助手点击扩展后打开的界面加载失败" })).toBeVisible();
+  await expect(gallery.getByRole("img", { name: "秋招网申助手的个人信息设置页面" })).toBeVisible();
+  const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
+  await expect(dialog.getByRole("region", { name: "已实现功能" }).getByRole("listitem")).toHaveCount(10);
+  await expect(dialog.getByRole("link", { name: /查看源码\s*（新窗口）/ })).toHaveAttribute(
+    "href",
+    "https://github.com/aurostars/Job-Application-Helper",
+  );
   const box = await gallery.locator(".project-image-frame").first().boundingBox();
   expect(box).not.toBeNull();
   expect(box!.height).toBeGreaterThan(0);
