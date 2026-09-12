@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { entranceEase } from "@/components/motion/motion-config";
+import { usePrefersReducedMotion } from "@/components/motion/use-prefers-reduced-motion";
 import type { ProjectCase } from "@/content/portfolio";
 
 const resumeBuilderUpstream = "https://github.com/JOYCEQL/magic-resume";
@@ -18,7 +19,7 @@ function imageSizes(project: ProjectCase, mediaIndex: number) {
 }
 
 export function CaseDetail({ project }: { project: ProjectCase }) {
-  const reduce = useReducedMotion();
+  const reduce = usePrefersReducedMotion();
 
   return (
     <motion.section

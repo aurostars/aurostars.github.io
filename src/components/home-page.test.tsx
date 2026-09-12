@@ -11,7 +11,7 @@ vi.mock("geist/font/sans", () => ({
 
 beforeEach(() => {
   vi.stubGlobal("matchMedia", vi.fn().mockImplementation((query: string) => ({
-    matches: query === "(prefers-reduced-motion)",
+    matches: query.includes("prefers-reduced-motion"),
     media: query,
     onchange: null,
     addEventListener: vi.fn(),

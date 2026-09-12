@@ -1,8 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { entranceEase } from "./motion-config";
+import { usePrefersReducedMotion } from "./use-prefers-reduced-motion";
 
 interface MotionChildrenProps {
   children: ReactNode;
@@ -15,7 +16,7 @@ export function StaggerGroup({
   delayChildren = 0,
   staggerChildren = 0.07,
 }: MotionChildrenProps & { delayChildren?: number; staggerChildren?: number }) {
-  const reduce = useReducedMotion();
+  const reduce = usePrefersReducedMotion();
   return (
     <motion.div
       className={className}
@@ -36,7 +37,7 @@ export function StaggerGroup({
 }
 
 export function StaggerItem({ children, className }: MotionChildrenProps) {
-  const reduce = useReducedMotion();
+  const reduce = usePrefersReducedMotion();
   return (
     <motion.div
       className={className}

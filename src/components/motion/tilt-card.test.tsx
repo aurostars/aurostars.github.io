@@ -19,6 +19,20 @@ vi.mock("motion/react", async () => {
   };
 });
 
+vi.mock("./use-prefers-reduced-motion", async () => {
+  const { useSyncExternalStore } = await vi.importActual<typeof import("react")>("react");
+  return {
+    usePrefersReducedMotion: () => useSyncExternalStore(
+      (listener) => {
+        reducedMotion.listeners.add(listener);
+        return () => reducedMotion.listeners.delete(listener);
+      },
+      () => reducedMotion.value,
+      () => reducedMotion.value,
+    ),
+  };
+});
+
 import { CaseSummaryCard } from "@/components/case-summary-card";
 import { portfolioCases } from "@/content/portfolio";
 

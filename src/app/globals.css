@@ -119,6 +119,12 @@ button:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  [data-motion],
+  [data-motion] [data-testid="stagger-item"] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 .hero {

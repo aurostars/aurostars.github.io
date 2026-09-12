@@ -23,6 +23,10 @@ vi.mock("motion/react", async () => {
   };
 });
 
+vi.mock("./use-prefers-reduced-motion", () => ({
+  usePrefersReducedMotion: () => reducedMotion.value,
+}));
+
 import { Reveal } from "./reveal";
 import { StaggerGroup, StaggerItem } from "./stagger";
 

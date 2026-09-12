@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { animate, motion, useMotionTemplate, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
+import { animate, motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from "motion/react";
 import { useEffect, useRef } from "react";
 import { useFinePointer } from "@/components/motion/use-fine-pointer";
+import { usePrefersReducedMotion } from "@/components/motion/use-prefers-reduced-motion";
 import type { ProjectCase } from "@/content/portfolio";
 
 export interface CaseSummaryCardProps {
@@ -14,7 +15,7 @@ export interface CaseSummaryCardProps {
 
 export function CaseSummaryCard({ project, expanded, onToggle }: CaseSummaryCardProps) {
   const cover = project.media.find((media) => !media.src.endsWith("icon.png")) ?? project.media[0];
-  const reduce = useReducedMotion();
+  const reduce = usePrefersReducedMotion();
   const canTilt = useFinePointer();
   const pointerX = useMotionValue(0.5);
   const pointerY = useMotionValue(0.5);
