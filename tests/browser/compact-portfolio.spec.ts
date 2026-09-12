@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const viewports = [
   { width: 1440, height: 900, columns: 3 },
@@ -8,18 +8,76 @@ const viewports = [
   { width: 320, height: 800, columns: 1 },
 ];
 
-for (const viewport of viewports) {
-  test(`${viewport.width}px uses ${viewport.columns} project columns without overflow`, async ({ page }) => {
-    await page.setViewportSize(viewport);
-    await page.goto("/", { waitUntil: "networkidle" });
-    const cards = page.locator(".case-card");
-    await expect(cards).toHaveCount(4);
-    const tops = await cards.evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().top)));
-    expect(new Set(tops.slice(0, viewport.columns)).size).toBe(1);
-    if (viewport.columns < 4) expect(tops[viewport.columns]).toBeGreaterThan(tops[0]);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
-  });
+async function injectProjectFixtures(page: Page, count: 5 | 6) {
+  await page.locator(".case-grid").evaluate((grid, targetCount) => {
+    const sourceCards = Array.from(grid.children);
+    for (let index = sourceCards.length; index < targetCount; index += 1) {
+      const fixture = sourceCards[index % sourceCards.length].cloneNode(true) as HTMLElement;
+      fixture.dataset.testFixture = `project-${index + 1}`;
+      const button = fixture.querySelector("button");
+      button?.setAttribute("aria-label", `查看项目详情：测试案例 ${index + 1}`);
+      grid.append(fixture);
+    }
+    (grid as HTMLElement).dataset.projectCount = String(targetCount);
+  }, count);
 }
+
+for (const viewport of viewports) {
+  for (const count of [5, 6] as const) {
+    test(`${viewport.width}px lays out ${count} real cards without overflow or placeholders`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/", { waitUntil: "networkidle" });
+      await injectProjectFixtures(page, count);
+
+      const cards = page.locator(".case-card");
+      await expect(cards).toHaveCount(count);
+      await expect(page.locator(".case-card-placeholder, [data-placeholder]")).toHaveCount(0);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+
+      const boxes = await cards.evaluateAll((nodes) => nodes.map((node) => {
+        const { x, y, width } = node.getBoundingClientRect();
+        return { x: Math.round(x), y: Math.round(y), width: Math.round(width) };
+      }));
+      expect(new Set(boxes.slice(0, viewport.columns).map(({ y }) => y)).size).toBe(1);
+      expect(boxes[viewport.columns].y).toBeGreaterThan(boxes[0].y);
+
+      if (count === 5) {
+        expect(new Set(boxes.map(({ width }) => width)).size).toBe(1);
+        const lastRowStart = Math.floor((count - 1) / viewport.columns) * viewport.columns;
+        expect(boxes[lastRowStart].x).toBe(boxes[0].x);
+      }
+
+      if (count === 6 && viewport.columns === 3) {
+        expect(new Set(boxes.slice(0, 3).map(({ y }) => y)).size).toBe(1);
+        expect(new Set(boxes.slice(3).map(({ y }) => y)).size).toBe(1);
+        expect(boxes[3].y).toBeGreaterThan(boxes[0].y);
+      }
+    });
+  }
+}
+
+test("detail gallery preserves complete product screenshots", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
+  const galleryImages = page.locator(".case-gallery img");
+  await expect(galleryImages).toHaveCount(4);
+  await expect(galleryImages.first()).toHaveCSS("object-fit", "contain");
+  await expect(galleryImages.nth(1)).toHaveCSS("object-fit", "contain");
+
+  await page.goto("/?project=resume-builder", { waitUntil: "networkidle" });
+  await expect(page.locator(".case-gallery img").first()).toHaveCSS("object-fit", "contain");
+});
+
+test("detail image failure keeps a stable 16:9 frame", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.route("**/projects/job-application-helper/icon.png", (route) => route.abort());
+  await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
+  await expect(page.getByRole("img", { name: "秋招网申助手的浏览器扩展图标加载失败" })).toBeVisible();
+  const box = await page.locator(".case-gallery .project-image-frame").first().boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.height).toBeGreaterThan(0);
+  expect(box!.width / box!.height).toBeCloseTo(16 / 9, 1);
+});
 
 test("opens, deep-links, restores history, focus, and body scrolling", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });

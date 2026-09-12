@@ -82,19 +82,24 @@ describe("home page", () => {
     const identity = screen.getByRole("region", { name: "个人信息" });
     expect(within(identity).getByRole("heading", { level: 1, name: "董星" })).toBeInTheDocument();
     expect(within(identity).getByText("AI 产品经理与独立开发者")).toBeInTheDocument();
-    expect(within(identity).getByRole("link", { name: "发送邮件" })).toHaveAttribute("href", "mailto:dongxing.123@bytedance.com");
+    expect(within(identity).getByRole("link", { name: "dongxing.123@bytedance.com" })).toHaveAttribute("href", "mailto:dongxing.123@bytedance.com");
     expect(within(identity).getByRole("link", { name: "访问 GitHub（新窗口）" })).toHaveAttribute("href", "https://github.com/aurostars");
     expect(screen.queryByText("认真体验，持续表达")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "查看项目" })).not.toBeInTheDocument();
   });
 
-  it("renders semantic education and five concise internship rows", () => {
+  it("renders schools, simplified majors, degrees, and semantic education dates", () => {
     render(<Home />);
     const history = screen.getByRole("region", { name: "教育与实习经历" });
     expect(within(history).getByRole("heading", { level: 2, name: "教育经历" })).toBeInTheDocument();
-    expect(within(history).getAllByTestId("education-row")).toHaveLength(2);
+    const educationRows = within(history).getAllByTestId("education-row");
+    expect(educationRows).toHaveLength(2);
+    expect(educationRows[0]).toHaveTextContent("北京师范大学经济学硕士2024-2027");
+    expect(educationRows[0].querySelector("time")).toHaveTextContent("2024-2027");
+    expect(educationRows[1]).toHaveTextContent("中国人民大学经济学学士2020-2024");
+    expect(educationRows[1].querySelector("time")).toHaveTextContent("2020-2024");
+    expect(within(history).queryByText(/理论经济学|应用经济学/)).not.toBeInTheDocument();
     expect(within(history).getAllByTestId("experience-row")).toHaveLength(5);
-    expect(within(history).getAllByText(/时间|公司|岗位|职责/).length).toBeGreaterThan(0);
   });
 
   it("labels the project section without the removed helper copy", () => {

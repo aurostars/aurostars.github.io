@@ -27,6 +27,13 @@ export interface ProjectCase {
   provenance: string;
 }
 
+export interface EducationItem {
+  school: string;
+  degree: string;
+  major: string;
+  period: string;
+}
+
 export interface ExperienceItem {
   period: string;
   organization: string;
@@ -119,9 +126,9 @@ export const experiences: ExperienceItem[] = [
   { period: "2023.03 - 2023.06", organization: "太平洋证券研究所", role: "行业研究", highlight: "行业数据分析与研究支持" },
 ];
 
-export const education = [
-  "北京师范大学 理论经济学硕士",
-  "中国人民大学 应用经济学学士",
+export const education: EducationItem[] = [
+  { school: "北京师范大学", degree: "硕士", major: "经济学", period: "2024-2027" },
+  { school: "中国人民大学", degree: "学士", major: "经济学", period: "2020-2024" },
 ];
 
 export const contact = {

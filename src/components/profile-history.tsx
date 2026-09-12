@@ -1,8 +1,8 @@
 import { Reveal } from "@/components/motion/reveal";
-import type { ExperienceItem } from "@/content/portfolio";
+import type { EducationItem, ExperienceItem } from "@/content/portfolio";
 
 export interface ProfileHistoryProps {
-  education: string[];
+  education: EducationItem[];
   experiences: ExperienceItem[];
 }
 
@@ -18,7 +18,13 @@ export function ProfileHistory({ education, experiences }: ProfileHistoryProps) 
         <section aria-labelledby="education-title">
           <h2 id="education-title">教育经历</h2>
           <ul className="education-list">
-            {education.map((item) => <li data-testid="education-row" key={item}>{item}</li>)}
+            {education.map((item) => (
+              <li data-testid="education-row" key={`${item.school}-${item.degree}`}>
+                <strong>{item.school}</strong>
+                <span>{item.major}{item.degree}</span>
+                <time>{item.period}</time>
+              </li>
+            ))}
           </ul>
         </section>
         <section aria-labelledby="internship-title">

@@ -16,7 +16,7 @@ export function IdentityBar({ name, role, email, github }: IdentityBarProps) {
           <p>{role}</p>
         </div>
         <div className="identity-links">
-          <a href={`mailto:${email}`}>发送邮件</a>
+          <a href={`mailto:${email}`}>{email}</a>
           <a href={github} target="_blank" rel="noopener noreferrer" aria-label="访问 GitHub（新窗口）">
             访问 GitHub<span className="sr-only">（新窗口）</span>
           </a>
