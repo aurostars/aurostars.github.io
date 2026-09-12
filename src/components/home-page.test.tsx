@@ -167,16 +167,34 @@ describe("home page", () => {
     expect(location.search).toBe("?project=job-application-helper");
   });
 
-  it("keeps the complete verified content and source links inside the dialog", async () => {
+  it.each(portfolioCases)("renders $title verified features and only its source link", async (project) => {
     const user = userEvent.setup();
     render(<Home />);
-    await user.click(screen.getByRole("button", { name: "查看项目详情：智能简历编辑工具" }));
-    const dialog = within(screen.getByRole("dialog", { name: "智能简历编辑工具" }));
-    expect(dialog.getByText(portfolioCases[2].background)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: `查看项目详情：${project.title}` }));
+    const dialog = within(screen.getByRole("dialog", { name: project.title }));
+
+    expect(dialog.getByText(project.background)).toBeInTheDocument();
     expect(dialog.getAllByTestId("workflow-step")).toHaveLength(5);
-    expect(dialog.getByRole("link", { name: /查看智能简历编辑工具源码.*新窗口/ })).toHaveAttribute("target", "_blank");
-    expect(dialog.getByRole("link", { name: /查看上游项目.*新窗口/ })).toHaveAttribute("target", "_blank");
-    expect(dialog.getByText(/JOYCEQL\/magic-resume/)).toBeInTheDocument();
+    expect(dialog.getByRole("heading", { name: "已实现功能" })).toBeInTheDocument();
+    for (const feature of project.features) {
+      expect(dialog.getByText(feature)).toBeInTheDocument();
+    }
+    expect(dialog.getByRole("link", { name: /查看源码/ })).toHaveAttribute("href", project.repositoryUrl);
+    expect(dialog.getAllByRole("link")).toHaveLength(1);
+    expect(dialog.queryByText("下载版本")).not.toBeInTheDocument();
+    expect(dialog.queryByText("查看上游项目")).not.toBeInTheDocument();
+  });
+
+  it("shows only the two approved Job Application Helper screenshots", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+    await user.click(screen.getByRole("button", { name: "查看项目详情：秋招网申助手" }));
+    const dialog = within(screen.getByRole("dialog", { name: "秋招网申助手" }));
+    const gallery = dialog.getByRole("group", { name: "秋招网申助手真实产品界面" });
+
+    expect(gallery.querySelectorAll("figure")).toHaveLength(2);
+    expect(within(gallery).getByRole("img", { name: "秋招网申助手点击扩展后打开的界面" })).toBeInTheDocument();
+    expect(within(gallery).getByRole("img", { name: "秋招网申助手的个人信息设置页面" })).toBeInTheDocument();
   });
 
   it("restores focus to the originating project card after close", async () => {

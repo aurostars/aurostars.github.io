@@ -451,13 +451,13 @@ button:focus-visible {
 
 .case-detail-grid section,
 .case-workflow,
-.case-outcomes {
+.case-features {
   min-width: 0;
 }
 
 .case-detail-grid h4,
 .case-workflow h4,
-.case-outcomes h4 {
+.case-features h4 {
   margin: 0 0 1rem;
   font-size: 1rem;
   font-weight: 750;
@@ -476,8 +476,7 @@ button:focus-visible {
   font-weight: 600;
 }
 
-.case-detail-grid ul,
-.case-highlights {
+.case-detail-grid ul {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -522,17 +521,18 @@ button:focus-visible {
   font-weight: 750;
 }
 
-.case-highlights {
+.case-features ul {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem 2rem;
+  margin: 0;
+  padding-left: 1.25rem;
 }
 
-.case-highlights li {
-  padding: 1rem 0;
-  border-top: 2px solid var(--color-foreground);
-  font-weight: 650;
-  line-height: 1.5;
+.case-features li {
+  padding-left: 0.125rem;
+  color: var(--color-muted);
+  line-height: 1.6;
 }
 
 .case-provenance {
@@ -548,6 +548,12 @@ button:focus-visible {
 @media (max-width: 1079px) {
   .case-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .case-features ul {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -592,7 +598,6 @@ button:focus-visible {
   .case-gallery[data-gallery-layout="featured-four"],
   .case-detail-grid,
   .workflow,
-  .case-highlights,
   .case-detail-grid ul {
     grid-template-columns: 1fr;
   }

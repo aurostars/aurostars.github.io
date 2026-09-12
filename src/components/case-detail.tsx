@@ -3,8 +3,6 @@
 import { ProjectImage } from "@/components/project-image";
 import type { ProjectCase } from "@/content/portfolio";
 
-const resumeBuilderUpstream = "https://github.com/JOYCEQL/magic-resume";
-
 function imageSizes(project: ProjectCase, mediaIndex: number) {
   if (project.slug === "job-application-helper") {
     return mediaIndex === 0
@@ -20,18 +18,8 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
     <div className="case-detail">
       <div className="case-detail-links" aria-label={`${project.title}项目链接`}>
         <a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer">
-          查看{project.title}源码<span className="sr-only">（新窗口）</span>
+          查看源码<span className="sr-only">（新窗口）</span>
         </a>
-        {project.releaseUrl ? (
-          <a href={project.releaseUrl} target="_blank" rel="noopener noreferrer">
-            下载版本<span className="sr-only">（新窗口）</span>
-          </a>
-        ) : null}
-        {project.slug === "resume-builder" ? (
-          <a href={resumeBuilderUpstream} target="_blank" rel="noopener noreferrer">
-            查看上游项目<span className="sr-only">（新窗口）</span>
-          </a>
-        ) : null}
       </div>
 
       <div
@@ -81,11 +69,11 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
         </ol>
       </section>
 
-      <section className="case-outcomes" aria-labelledby={`${project.slug}-outcomes`}>
-        <h4 id={`${project.slug}-outcomes`}>已实现能力</h4>
-        <ul className="case-highlights">
-          {project.highlights.map((item) => (
-            <li key={item}>{item}</li>
+      <section className="case-features" aria-labelledby={`${project.slug}-features`}>
+        <h4 id={`${project.slug}-features`}>已实现功能</h4>
+        <ul>
+          {project.features.map((feature) => (
+            <li key={feature}>{feature}</li>
           ))}
         </ul>
       </section>
