@@ -9,23 +9,121 @@ const viewports = [
   { width: 320, height: 800, columns: 1 },
 ];
 
-function parseColor(value: string) {
-  const channels = value.match(/[\d.]+/g)?.map(Number) ?? [];
+type Color = { rgb: [number, number, number]; alpha: number };
+type Point = { x: number; y: number };
+
+function parseColor(value: string): Color {
+  const normalized = value.trim();
+  if (/^#[\da-f]{6}([\da-f]{2})?$/i.test(normalized)) {
+    return {
+      rgb: [
+        Number.parseInt(normalized.slice(1, 3), 16),
+        Number.parseInt(normalized.slice(3, 5), 16),
+        Number.parseInt(normalized.slice(5, 7), 16),
+      ],
+      alpha: normalized.length === 9 ? Number.parseInt(normalized.slice(7, 9), 16) / 255 : 1,
+    };
+  }
+  const channels = normalized.match(/[\d.]+/g)?.map(Number) ?? [];
+  if (channels.length < 3) {
+    throw new Error(`Unsupported computed color: ${value}`);
+  }
   return {
-    rgb: channels.slice(0, 3),
+    rgb: channels.slice(0, 3) as Color["rgb"],
     alpha: channels[3] ?? 1,
   };
 }
 
-function contrastRatio(foreground: string, background: string) {
-  const luminance = (channels: number[]) => channels
+function composite(foreground: Color, background: Color): Color {
+  const alpha = foreground.alpha + background.alpha * (1 - foreground.alpha);
+  return {
+    rgb: foreground.rgb.map((channel, index) => (
+      (channel * foreground.alpha + background.rgb[index] * background.alpha * (1 - foreground.alpha)) / alpha
+    )) as Color["rgb"],
+    alpha,
+  };
+}
+
+function contrastRatio(foreground: Color | string, background: Color | string) {
+  const luminance = (color: Color | string) => (typeof color === "string" ? parseColor(color) : color).rgb
     .map((channel) => channel / 255)
     .map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
     .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
-  const foregroundLuminance = luminance(parseColor(foreground).rgb);
-  const backgroundLuminance = luminance(parseColor(background).rgb);
+  const foregroundLuminance = luminance(foreground);
+  const backgroundLuminance = luminance(background);
   return (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
     / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
+}
+
+function surfaceSamplePoints(box: { x: number; y: number; width: number; height: number }): Point[] {
+  const inset = 1;
+  return [
+    { x: box.x + inset, y: box.y + inset },
+    { x: box.x + box.width - inset, y: box.y + inset },
+    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+    { x: box.x + inset, y: box.y + box.height - inset },
+    { x: box.x + box.width - inset, y: box.y + box.height - inset },
+  ];
+}
+
+function effectivePageBackgroundsAt(
+  point: Point,
+  pageMetrics: { width: number; height: number; rootFontSize: number },
+  colors: { base: string; primary: string; secondary: string; texture: string },
+) {
+  const base = parseColor(colors.base);
+  const gradientAt = (color: string, center: Point, radiusRem: number) => {
+    const parsed = parseColor(color);
+    const distance = Math.hypot(point.x - center.x, point.y - center.y);
+    return { ...parsed, alpha: parsed.alpha * Math.max(0, 1 - distance / (radiusRem * pageMetrics.rootFontSize)) };
+  };
+  const secondary = gradientAt(colors.secondary, {
+    x: pageMetrics.width * 0.88,
+    y: pageMetrics.height * 0.24,
+  }, 34);
+  const primary = gradientAt(colors.primary, {
+    x: pageMetrics.width * 0.12,
+    y: pageMetrics.height * 0.08,
+  }, 30);
+  const pageBackground = composite(primary, composite(secondary, base));
+  const texture = parseColor(colors.texture);
+  const texturedBackground = composite({ ...texture, alpha: texture.alpha * 0.18 }, pageBackground);
+  return [pageBackground, texturedBackground];
+}
+
+function expectReadableOnSurface(
+  textColor: string,
+  surfaceColor: string,
+  points: Point[],
+  pageMetrics: { width: number; height: number; rootFontSize: number },
+  pageColors: { base: string; primary: string; secondary: string; texture: string },
+) {
+  const surface = parseColor(surfaceColor);
+  const effectiveBackgrounds = points.flatMap((point) => effectivePageBackgroundsAt(point, pageMetrics, pageColors))
+    .map((background) => composite(surface, background));
+  expect(Math.min(...effectiveBackgrounds.map((background) => contrastRatio(textColor, background))))
+    .toBeGreaterThanOrEqual(4.5);
+}
+
+function expectRectClose(
+  actual: { x: number; y: number; width: number; height: number },
+  expected: { x: number; y: number; width: number; height: number },
+  tolerance = 1,
+) {
+  for (const key of ["x", "y", "width", "height"] as const) {
+    expect(Math.abs(actual[key] - expected[key]), `${key} changed`).toBeLessThanOrEqual(tolerance);
+  }
+}
+
+function rectanglesOverlap(
+  first: { x: number; y: number; width: number; height: number },
+  second: { x: number; y: number; width: number; height: number },
+) {
+  const epsilon = 0.5;
+  return first.x < second.x + second.width - epsilon
+    && first.x + first.width > second.x + epsilon
+    && first.y < second.y + second.height - epsilon
+    && first.y + first.height > second.y + epsilon;
 }
 
 async function injectProjectFixtures(page: Page, count: 5 | 6) {
@@ -58,34 +156,86 @@ test("dark theme keeps focused navigation, text, focus ring, and glass surfaces 
   const card = page.getByRole("button", { name: "查看项目详情：秋招网申助手" });
   await card.focus();
   await expect(card).toBeFocused();
-  const styles = await page.evaluate(() => {
-    const computed = (selector: string) => getComputedStyle(document.querySelector(selector)!);
-    return {
-      body: computed("body"),
-      identity: computed(".identity-bar-motion"),
-      history: computed(".profile-history-motion"),
-      card: computed(".case-card"),
-      summary: computed(".case-card-summary"),
-      detail: computed(".experience-highlight"),
-    };
-  }).then((result) => ({
-    body: { color: result.body.color, backgroundColor: result.body.backgroundColor },
-    identity: { backgroundColor: result.identity.backgroundColor },
-    history: { backgroundColor: result.history.backgroundColor },
-    card: { backgroundColor: result.card.backgroundColor, outlineColor: result.card.outlineColor },
-    summary: { color: result.summary.color },
-    detail: { color: result.detail.color },
-  }));
+  const [identityBox, historyBox, cardBox] = await Promise.all([
+    page.locator(".identity-bar-motion").boundingBox(),
+    page.locator(".profile-history-motion").boundingBox(),
+    card.boundingBox(),
+  ]);
+  expect(identityBox).not.toBeNull();
+  expect(historyBox).not.toBeNull();
+  expect(cardBox).not.toBeNull();
 
+  const styles = await page.evaluate(() => {
+    const root = getComputedStyle(document.documentElement);
+    const style = (selector: string) => getComputedStyle(document.querySelector(selector)!);
+    const body = style("body");
+    const identity = style(".identity-bar-motion");
+    const history = style(".profile-history-motion");
+    const card = style(".case-card");
+    return {
+      pageMetrics: {
+        width: document.body.getBoundingClientRect().width,
+        height: document.body.getBoundingClientRect().height,
+        rootFontSize: Number.parseFloat(root.fontSize),
+      },
+      pageColors: {
+        base: root.getPropertyValue("--portfolio-background"),
+        primary: root.getPropertyValue("--portfolio-ambient-primary"),
+        secondary: root.getPropertyValue("--portfolio-ambient-secondary"),
+        texture: root.getPropertyValue("--portfolio-texture"),
+      },
+      body: { color: body.color, backgroundColor: body.backgroundColor },
+      identity: {
+        textColors: Array.from(document.querySelectorAll(".identity-bar-motion h1, .identity-bar-motion a"))
+          .map((element) => getComputedStyle(element).color),
+        backgroundColor: identity.backgroundColor,
+      },
+      history: {
+        textColors: Array.from(document.querySelectorAll(".profile-history-motion h2, .profile-history-motion strong, .profile-history-motion span, .profile-history-motion time, .profile-history-motion p"))
+          .map((element) => getComputedStyle(element).color),
+        backgroundColor: history.backgroundColor,
+      },
+      card: {
+        backgroundColor: card.backgroundColor,
+        outlineColor: card.outlineColor,
+        summaryColor: style(".case-card-summary").color,
+      },
+    };
+  });
+
+  const identityPoints = surfaceSamplePoints(identityBox!);
+  const historyPoints = surfaceSamplePoints(historyBox!);
   expect(parseColor(styles.body.backgroundColor).alpha).toBe(1);
   expect(parseColor(styles.identity.backgroundColor).alpha).toBeGreaterThanOrEqual(0.8);
   expect(parseColor(styles.history.backgroundColor).alpha).toBeGreaterThanOrEqual(0.8);
   expect(parseColor(styles.card.backgroundColor).alpha).toBe(1);
   expect(contrastRatio(styles.body.color, styles.body.backgroundColor)).toBeGreaterThanOrEqual(4.5);
-  expect(contrastRatio(styles.summary.color, styles.card.backgroundColor)).toBeGreaterThanOrEqual(4.5);
-  expect(contrastRatio(styles.detail.color, styles.history.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+  expect(styles.identity.textColors).not.toHaveLength(0);
+  for (const textColor of styles.identity.textColors) {
+    expectReadableOnSurface(
+      textColor,
+      styles.identity.backgroundColor,
+      identityPoints,
+      styles.pageMetrics,
+      styles.pageColors,
+    );
+  }
+  expect(styles.history.textColors).not.toHaveLength(0);
+  for (const textColor of styles.history.textColors) {
+    expectReadableOnSurface(
+      textColor,
+      styles.history.backgroundColor,
+      historyPoints,
+      styles.pageMetrics,
+      styles.pageColors,
+    );
+  }
+  expect(contrastRatio(styles.card.summaryColor, styles.card.backgroundColor)).toBeGreaterThanOrEqual(4.5);
   expect(parseColor(styles.card.outlineColor).alpha).toBe(1);
-  expect(contrastRatio(styles.card.outlineColor, styles.card.backgroundColor)).toBeGreaterThanOrEqual(3);
+  const focusBackgrounds = surfaceSamplePoints(cardBox!)
+    .flatMap((point) => effectivePageBackgroundsAt(point, styles.pageMetrics, styles.pageColors));
+  expect(Math.min(...focusBackgrounds.map((background) => contrastRatio(styles.card.outlineColor, background))))
+    .toBeGreaterThanOrEqual(3);
 });
 
 for (const viewport of viewports) {
@@ -118,45 +268,69 @@ for (const viewport of viewports) {
   });
 }
 
-test("company logo network failure keeps its slot, company name, and experience row stable", async ({ page }) => {
-  let failedRequest = false;
-  await page.route("**/companies/bytedance.svg", async (route) => {
-    failedRequest = true;
-    await route.abort("failed");
-  });
+test("company logo failure preserves the successful row, slot, and company text geometry", async ({ page }) => {
   await page.goto("/", { waitUntil: "networkidle" });
 
   const row = page.getByTestId("experience-row").first();
   const slot = row.locator(".company-logo-slot");
-  await expect.poll(() => failedRequest).toBe(true);
-  await expect(row.getByText("字节跳动")).toBeVisible();
-  await expect(row.getByRole("img", { name: "字节跳动 Logo" })).toHaveCount(0);
-  const [rowBox, slotBox] = await Promise.all([row.boundingBox(), slot.boundingBox()]);
-  expect(rowBox).not.toBeNull();
-  expect(slotBox).not.toBeNull();
-  expect(rowBox!.height).toBeGreaterThan(0);
-  expect(slotBox!.width).toBeGreaterThan(0);
-  expect(slotBox!.height).toBeGreaterThan(0);
-});
-
-test("company logos load in original color and fit their fixed slots without cropping", async ({ page }) => {
-  await page.goto("/", { waitUntil: "networkidle" });
-  const logo = page.getByRole("img", { name: "字节跳动 Logo" });
+  const company = row.getByText("字节跳动", { exact: true });
+  const logo = row.getByRole("img", { name: "字节跳动 Logo" });
   await expect(logo).toBeVisible();
   const imageState = await logo.evaluate((element) => {
     const image = element as HTMLImageElement;
-    const style = getComputedStyle(image);
+    const effects = [];
+    for (let node: Element | null = image; node; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      effects.push({ opacity: style.opacity, filter: style.filter, mixBlendMode: style.mixBlendMode });
+      if (node.matches('[data-testid="experience-row"]')) break;
+    }
     return {
       complete: image.complete,
       naturalWidth: image.naturalWidth,
-      objectFit: style.objectFit,
-      filter: style.filter,
+      objectFit: getComputedStyle(image).objectFit,
+      effects,
     };
   });
   expect(imageState.complete).toBe(true);
   expect(imageState.naturalWidth).toBeGreaterThan(0);
   expect(imageState.objectFit).toBe("contain");
-  expect(imageState.filter).toBe("none");
+  expect(imageState.effects).not.toHaveLength(0);
+  expect(imageState.effects.every(({ opacity }) => opacity === "1")).toBe(true);
+  expect(imageState.effects.every(({ filter }) => filter === "none")).toBe(true);
+  expect(imageState.effects.every(({ mixBlendMode }) => mixBlendMode === "normal")).toBe(true);
+
+  const [loadedRowBox, loadedSlotBox, loadedCompanyBox] = await Promise.all([
+    row.boundingBox(),
+    slot.boundingBox(),
+    company.boundingBox(),
+  ]);
+  expect(loadedRowBox).not.toBeNull();
+  expect(loadedSlotBox).not.toBeNull();
+  expect(loadedCompanyBox).not.toBeNull();
+  expect(loadedSlotBox!.width).toBeCloseTo(88, 0);
+  expect(loadedSlotBox!.height).toBeCloseTo(40, 0);
+
+  let failedRequest = false;
+  await page.route("**/companies/bytedance.svg", async (route) => {
+    failedRequest = true;
+    await route.abort("failed");
+  });
+  await page.reload({ waitUntil: "networkidle" });
+  await expect.poll(() => failedRequest).toBe(true);
+  await expect(row.getByRole("img", { name: "字节跳动 Logo" })).toHaveCount(0);
+  await expect(company).toBeVisible();
+
+  const [failedRowBox, failedSlotBox, failedCompanyBox] = await Promise.all([
+    row.boundingBox(),
+    slot.boundingBox(),
+    company.boundingBox(),
+  ]);
+  expect(failedRowBox).not.toBeNull();
+  expect(failedSlotBox).not.toBeNull();
+  expect(failedCompanyBox).not.toBeNull();
+  expectRectClose(failedRowBox!, loadedRowBox!);
+  expectRectClose(failedSlotBox!, loadedSlotBox!);
+  expectRectClose(failedCompanyBox!, loadedCompanyBox!);
 });
 
 test("project instruction stays adjacent to its heading and wraps without mobile overflow", async ({ page }) => {
@@ -179,6 +353,7 @@ test("project instruction stays adjacent to its heading and wraps without mobile
 for (const viewport of viewports) {
   for (const count of [5, 6] as const) {
     test(`${viewport.width}px lays out ${count} real cards without overflow or placeholders`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" });
       await page.setViewportSize(viewport);
       await page.goto("/", { waitUntil: "networkidle" });
       await injectProjectFixtures(page, count);
@@ -189,21 +364,41 @@ for (const viewport of viewports) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
 
       const boxes = await cards.evaluateAll((nodes) => nodes.map((node) => {
-        const { x, y, width } = node.getBoundingClientRect();
-        return { x: Math.round(x), y: Math.round(y), width: Math.round(width) };
+        const { x, y, width, height } = node.getBoundingClientRect();
+        return { x, y, width, height };
       }));
-      expect(new Set(boxes.slice(0, viewport.columns).map(({ y }) => y)).size).toBe(1);
+      for (const box of boxes) {
+        expect(box.width).toBeGreaterThan(0);
+        expect(box.height).toBeGreaterThan(0);
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+      }
+      for (let rowStart = 0; rowStart < count; rowStart += viewport.columns) {
+        const row = boxes.slice(rowStart, rowStart + viewport.columns);
+        expect(Math.max(...row.map(({ y }) => y)) - Math.min(...row.map(({ y }) => y))).toBeLessThanOrEqual(1);
+        for (let index = 1; index < row.length; index += 1) {
+          expect(row[index].x).toBeGreaterThan(row[index - 1].x);
+        }
+      }
+      for (let first = 0; first < boxes.length; first += 1) {
+        for (let second = first + 1; second < boxes.length; second += 1) {
+          expect(rectanglesOverlap(boxes[first], boxes[second]), `cards ${first + 1} and ${second + 1} overlap`).toBe(false);
+        }
+      }
       expect(boxes[viewport.columns].y).toBeGreaterThan(boxes[0].y);
 
       if (count === 5) {
-        expect(new Set(boxes.map(({ width }) => width)).size).toBe(1);
+        expect(Math.max(...boxes.map(({ width }) => width)) - Math.min(...boxes.map(({ width }) => width)))
+          .toBeLessThanOrEqual(1);
         const lastRowStart = Math.floor((count - 1) / viewport.columns) * viewport.columns;
-        expect(boxes[lastRowStart].x).toBe(boxes[0].x);
+        expect(Math.abs(boxes[lastRowStart].x - boxes[0].x)).toBeLessThanOrEqual(1);
       }
 
       if (count === 6 && viewport.columns === 3) {
-        expect(new Set(boxes.slice(0, 3).map(({ y }) => y)).size).toBe(1);
-        expect(new Set(boxes.slice(3).map(({ y }) => y)).size).toBe(1);
+        expect(Math.max(...boxes.slice(0, 3).map(({ y }) => y)) - Math.min(...boxes.slice(0, 3).map(({ y }) => y)))
+          .toBeLessThanOrEqual(1);
+        expect(Math.max(...boxes.slice(3).map(({ y }) => y)) - Math.min(...boxes.slice(3).map(({ y }) => y)))
+          .toBeLessThanOrEqual(1);
         expect(boxes[3].y).toBeGreaterThan(boxes[0].y);
       }
     });

@@ -512,7 +512,7 @@ git commit -m "fix: center and refine project dialog"
 
 - [ ] **Step 1: Add failing responsive history assertions**
 
-At 1440 and 1024px, assert education and internship section boxes share the same top coordinate and do not overlap. At 768, 390, and 320px, assert internship starts below education and document width does not exceed viewport width.
+At 1440, 1024, and 768px, assert education and internship section boxes share the same top coordinate and do not overlap. At 767, 390, and 320px, assert internship starts below education and document width does not exceed viewport width.
 
 - [ ] **Step 2: Add failing theme and asset-degradation assertions**
 
