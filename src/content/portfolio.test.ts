@@ -30,7 +30,7 @@ const expectedFeatureBounds = {
 
 const expectedExperienceFacts = [
   { period: "2026.07 - 至今", organization: "字节跳动", role: "AI 产品经理", highlight: "企业 Agent 和团队数字员工的搭建与迭代" },
-  { period: "2026.03 - 2026.07", organization: "科大讯飞", role: "AI产品经理", highlight: "多模态心脏超声智能报告系统" },
+  { period: "2026.03 - 2026.07", organization: "科大讯飞", role: "AI 产品经理", highlight: "多模态心脏超声智能报告系统" },
   { period: "2025.10 - 2026.01", organization: "美团快驴", role: "产品运营", highlight: "AI 工具驱动业务流程提效" },
   { period: "2025.06 - 2025.09", organization: "国务院发展研究中心大数据研究院", role: "产品经理", highlight: "研究与数据产品实践" },
   { period: "2023.10 - 2024.01", organization: "BOSS直聘", role: "行业与产品研究", highlight: "招聘市场与行业研究" },
@@ -99,8 +99,8 @@ describe("portfolio content", () => {
       {
         src: "/projects/job-application-helper/extension-popup.png",
         alt: "秋招网申助手点击扩展后打开的界面",
-        width: 1600,
-        height: 900,
+        width: 360,
+        height: 531,
       },
       {
         src: "/projects/job-application-helper/profile-manager.png",

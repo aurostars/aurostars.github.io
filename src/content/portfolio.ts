@@ -70,7 +70,7 @@ export const portfolioCases: ProjectCase[] = [
     ],
     repositoryUrl: "https://github.com/aurostars/Job-Application-Helper",
     media: [
-      { src: "/projects/job-application-helper/extension-popup.png", alt: "秋招网申助手点击扩展后打开的界面", width: 1600, height: 900 },
+      { src: "/projects/job-application-helper/extension-popup.png", alt: "秋招网申助手点击扩展后打开的界面", width: 360, height: 531 },
       { src: "/projects/job-application-helper/profile-manager.png", alt: "秋招网申助手的个人信息设置页面", width: 1920, height: 1563 },
     ],
     provenance: "独立开发项目，页面只展示仓库和真实运行结果可验证的功能。",
@@ -181,7 +181,7 @@ export const experiences: ExperienceItem[] = [
   {
     period: "2026.03 - 2026.07",
     organization: "科大讯飞",
-    role: "AI产品经理",
+    role: "AI 产品经理",
     highlight: "多模态心脏超声智能报告系统",
     logo: { src: "/companies/iflytek.svg", alt: "科大讯飞 Logo", width: 168, height: 33 },
   },

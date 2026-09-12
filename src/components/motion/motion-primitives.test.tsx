@@ -3,6 +3,7 @@ import { createElement, type ComponentPropsWithoutRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const reducedMotion = vi.hoisted(() => ({ value: false }));
+const progressiveAnimation = vi.hoisted(() => ({ value: true }));
 
 vi.mock("motion/react", async () => {
   const actual = await vi.importActual<typeof import("motion/react")>("motion/react");
@@ -27,11 +28,16 @@ vi.mock("./use-prefers-reduced-motion", () => ({
   usePrefersReducedMotion: () => reducedMotion.value,
 }));
 
+vi.mock("./use-progressive-animation", () => ({
+  useProgressiveAnimation: () => progressiveAnimation.value,
+}));
+
 import { Reveal } from "./reveal";
 import { StaggerGroup, StaggerItem } from "./stagger";
 
 beforeEach(() => {
   reducedMotion.value = false;
+  progressiveAnimation.value = true;
   vi.stubGlobal("IntersectionObserver", class {
     observe() {}
     unobserve() {}
@@ -49,6 +55,16 @@ describe("motion primitives", () => {
     render(<Reveal><span>内容</span></Reveal>);
     expect(screen.getByTestId("reveal")).toHaveAttribute("data-motion", "enabled");
     expect(screen.getByTestId("reveal")).toHaveAttribute("data-viewport-once", "true");
+  });
+
+  it("keeps Reveal visible until the client confirms animation capability", () => {
+    progressiveAnimation.value = false;
+    render(<Reveal delay={0.4}><span>静态初始内容</span></Reveal>);
+
+    expect(screen.getByTestId("reveal")).toHaveAttribute("data-motion", "static");
+    expect(screen.getByTestId("reveal")).toHaveAttribute("data-initial", "false");
+    expect(screen.getByTestId("reveal")).toHaveAttribute("data-transition", '{"duration":0}');
+    expect(screen.getByText("静态初始内容")).toBeVisible();
   });
 
   it("renders Reveal without an initial offset or delay for reduced motion", () => {

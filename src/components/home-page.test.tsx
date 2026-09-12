@@ -61,9 +61,14 @@ function renderLayout(children: React.ReactNode = <div id="content-probe">conten
 }
 
 describe("site shell", () => {
-  it("describes the portfolio for AI product manager recruiting", () => {
-    expect(metadata.title).toBe("董星 | AI 产品经理与独立开发者");
-    expect(metadata.description).toContain("个人项目案例");
+  it("uses personal-homepage metadata without a removed career label", () => {
+    expect(metadata.title).toBe("董星的个人主页");
+    expect(metadata.description).toBe("董星的个人主页，记录教育与实习经历，并展示独立项目与真实产品实践。");
+    expect(metadata.openGraph).toMatchObject({
+      title: "董星的个人主页",
+      description: "查看董星的教育、实习经历与个人项目。",
+    });
+    expect(JSON.stringify(metadata)).not.toContain("AI 产品经理与独立开发者");
   });
 
   it("keeps the skip link and removes directory navigation", () => {
@@ -148,8 +153,8 @@ describe("home page", () => {
     render(<FeaturedCases projects={portfolioCases} />);
     const trigger = screen.getByRole("button", { name: "查看项目详情：秋招网申助手" });
     const image = within(trigger).getByRole("img", { name: "秋招网申助手点击扩展后打开的界面" });
-    expect(image).toHaveAttribute("width", "1600");
-    expect(image).toHaveAttribute("height", "900");
+    expect(image).toHaveAttribute("width", "360");
+    expect(image).toHaveAttribute("height", "531");
   });
 
   it("renders exactly one case card per project and no future placeholders", () => {
@@ -171,8 +176,15 @@ describe("home page", () => {
     const user = userEvent.setup();
     render(<Home />);
     await user.click(screen.getByRole("button", { name: `查看项目详情：${project.title}` }));
-    const dialog = within(screen.getByRole("dialog", { name: project.title }));
+    const dialogElement = screen.getByRole("dialog", { name: project.title });
+    const dialog = within(dialogElement);
 
+    expect(dialog.getByText(project.summary)).toBeInTheDocument();
+    const title = dialog.getByRole("heading", { level: 2, name: project.title });
+    const summary = dialog.getByText(project.summary);
+    const gallery = dialog.getByRole("group", { name: `${project.title}真实产品界面` });
+    expect(title.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(summary.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(dialog.getByText(project.background)).toBeInTheDocument();
     expect(dialog.getAllByTestId("workflow-step")).toHaveLength(5);
     expect(dialog.getByRole("heading", { name: "已实现功能" })).toBeInTheDocument();

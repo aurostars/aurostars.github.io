@@ -124,7 +124,10 @@ export function CaseDialog({ project, onClose, returnFocusTo, fallbackFocusRef }
             transition={transition}
           >
             <header className="case-dialog-header">
-              <h2 id="case-dialog-title">{project.title}</h2>
+              <div className="case-dialog-heading">
+                <h2 id="case-dialog-title">{project.title}</h2>
+                <p>{project.summary}</p>
+              </div>
               <button
                 ref={closeButtonRef}
                 type="button"

@@ -4,11 +4,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://aurostars.github.io"),
-  title: "董星 | AI 产品经理与独立开发者",
-  description: "董星的 AI 产品经理个人主页，展示网申助手、面试复盘、智能简历和会议纪要等个人项目案例。",
+  title: "董星的个人主页",
+  description: "董星的个人主页，记录教育与实习经历，并展示独立项目与真实产品实践。",
   openGraph: {
-    title: "董星 | AI 产品经理与独立开发者",
-    description: "从问题定义到结果验证，查看董星的 AI 产品案例。",
+    title: "董星的个人主页",
+    description: "查看董星的教育、实习经历与个人项目。",
     url: "https://aurostars.github.io",
     siteName: "董星的个人主页",
     locale: "zh_CN",
