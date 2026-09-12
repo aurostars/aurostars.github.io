@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
+import sharp from "sharp";
 
 const viewports = [
   { width: 1440, height: 900, columns: 3 },
@@ -10,7 +11,6 @@ const viewports = [
 ];
 
 type Color = { rgb: [number, number, number]; alpha: number };
-type Point = { x: number; y: number };
 
 function parseColor(value: string): Color {
   const normalized = value.trim();
@@ -34,16 +34,6 @@ function parseColor(value: string): Color {
   };
 }
 
-function composite(foreground: Color, background: Color): Color {
-  const alpha = foreground.alpha + background.alpha * (1 - foreground.alpha);
-  return {
-    rgb: foreground.rgb.map((channel, index) => (
-      (channel * foreground.alpha + background.rgb[index] * background.alpha * (1 - foreground.alpha)) / alpha
-    )) as Color["rgb"],
-    alpha,
-  };
-}
-
 function contrastRatio(foreground: Color | string, background: Color | string) {
   const luminance = (color: Color | string) => (typeof color === "string" ? parseColor(color) : color).rgb
     .map((channel) => channel / 255)
@@ -55,54 +45,87 @@ function contrastRatio(foreground: Color | string, background: Color | string) {
     / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
 }
 
-function surfaceSamplePoints(box: { x: number; y: number; width: number; height: number }): Point[] {
-  const inset = 1;
-  return [
-    { x: box.x + inset, y: box.y + inset },
-    { x: box.x + box.width - inset, y: box.y + inset },
-    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
-    { x: box.x + inset, y: box.y + box.height - inset },
-    { x: box.x + box.width - inset, y: box.y + box.height - inset },
-  ];
+async function rawPixels(buffer: Buffer) {
+  return sharp(buffer).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 }
 
-function effectivePageBackgroundsAt(
-  point: Point,
-  pageMetrics: { width: number; height: number; rootFontSize: number },
-  colors: { base: string; primary: string; secondary: string; texture: string },
-) {
-  const base = parseColor(colors.base);
-  const gradientAt = (color: string, center: Point, radiusRem: number) => {
-    const parsed = parseColor(color);
-    const distance = Math.hypot(point.x - center.x, point.y - center.y);
-    return { ...parsed, alpha: parsed.alpha * Math.max(0, 1 - distance / (radiusRem * pageMetrics.rootFontSize)) };
+function pixelAt(data: Buffer, width: number, x: number, y: number): Color {
+  const offset = (y * width + x) * 4;
+  return { rgb: [data[offset], data[offset + 1], data[offset + 2]], alpha: data[offset + 3] / 255 };
+}
+
+function colorDistance(first: Color, second: Color) {
+  return Math.hypot(...first.rgb.map((channel, index) => channel - second.rgb[index]));
+}
+
+async function expectRenderedTextContrast(locator: Locator, label: string, minimum = 4.5) {
+  await locator.scrollIntoViewIfNeeded();
+  const foreground = parseColor(await locator.evaluate((element) => getComputedStyle(element).color));
+  const visible = await rawPixels(await locator.screenshot({ animations: "disabled" }));
+  const marker = "active";
+  await locator.evaluate((element, value) => element.setAttribute("data-contrast-sample", value), marker);
+  await locator.page().addStyleTag({ content: `
+    [data-contrast-sample="${marker}"], [data-contrast-sample="${marker}"] * {
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+      text-decoration-color: transparent !important;
+      text-shadow: none !important;
+    }
+  ` });
+  const background = await rawPixels(await locator.screenshot({ animations: "disabled" }));
+  await locator.evaluate((element) => element.removeAttribute("data-contrast-sample"));
+
+  expect(background.info.width, `${label} background width`).toBe(visible.info.width);
+  expect(background.info.height, `${label} background height`).toBe(visible.info.height);
+  const ratios: number[] = [];
+  for (let y = 0; y < visible.info.height; y += 1) {
+    for (let x = 0; x < visible.info.width; x += 1) {
+      const renderedForeground = pixelAt(visible.data, visible.info.width, x, y);
+      const renderedBackground = pixelAt(background.data, background.info.width, x, y);
+      // Solid glyph interiors render at (or extremely near) the declared foreground;
+      // this excludes anti-aliased edge pixels without assuming the background color.
+      if (colorDistance(renderedForeground, foreground) <= 8
+        && colorDistance(renderedForeground, renderedBackground) >= 16) {
+        ratios.push(contrastRatio(renderedForeground, renderedBackground));
+      }
+    }
+  }
+  expect(ratios.length, `${label} must expose solid rendered glyph pixels`).toBeGreaterThan(0);
+  expect(Math.min(...ratios), `${label} rendered-pixel contrast`).toBeGreaterThanOrEqual(minimum);
+}
+
+async function expectRenderedFocusIndicator(locator: Locator, label: string) {
+  await locator.scrollIntoViewIfNeeded();
+  const box = await locator.boundingBox();
+  expect(box, `${label} bounds`).not.toBeNull();
+  const outline = parseColor(await locator.evaluate((element) => getComputedStyle(element).outlineColor));
+  const viewport = locator.page().viewportSize()!;
+  const inset = 7;
+  const clip = {
+    x: Math.max(0, Math.floor(box!.x - inset)),
+    y: Math.max(0, Math.floor(box!.y - inset)),
+    width: Math.min(viewport.width, Math.ceil(box!.x + box!.width + inset)) - Math.max(0, Math.floor(box!.x - inset)),
+    height: Math.min(viewport.height, Math.ceil(box!.y + box!.height + inset)) - Math.max(0, Math.floor(box!.y - inset)),
   };
-  const secondary = gradientAt(colors.secondary, {
-    x: pageMetrics.width * 0.88,
-    y: pageMetrics.height * 0.24,
-  }, 34);
-  const primary = gradientAt(colors.primary, {
-    x: pageMetrics.width * 0.12,
-    y: pageMetrics.height * 0.08,
-  }, 30);
-  const pageBackground = composite(primary, composite(secondary, base));
-  const texture = parseColor(colors.texture);
-  const texturedBackground = composite({ ...texture, alpha: texture.alpha * 0.18 }, pageBackground);
-  return [pageBackground, texturedBackground];
-}
+  const focused = await rawPixels(await locator.page().screenshot({ clip, animations: "disabled" }));
+  const marker = "active";
+  await locator.evaluate((element, value) => element.setAttribute("data-focus-sample", value), marker);
+  await locator.page().addStyleTag({ content: `[data-focus-sample="${marker}"] { outline-color: transparent !important; }` });
+  const background = await rawPixels(await locator.page().screenshot({ clip, animations: "disabled" }));
+  await locator.evaluate((element) => element.removeAttribute("data-focus-sample"));
 
-function expectReadableOnSurface(
-  textColor: string,
-  surfaceColor: string,
-  points: Point[],
-  pageMetrics: { width: number; height: number; rootFontSize: number },
-  pageColors: { base: string; primary: string; secondary: string; texture: string },
-) {
-  const surface = parseColor(surfaceColor);
-  const effectiveBackgrounds = points.flatMap((point) => effectivePageBackgroundsAt(point, pageMetrics, pageColors))
-    .map((background) => composite(surface, background));
-  expect(Math.min(...effectiveBackgrounds.map((background) => contrastRatio(textColor, background))))
-    .toBeGreaterThanOrEqual(4.5);
+  const ratios: number[] = [];
+  for (let y = 0; y < focused.info.height; y += 1) {
+    for (let x = 0; x < focused.info.width; x += 1) {
+      const indicator = pixelAt(focused.data, focused.info.width, x, y);
+      const behindIndicator = pixelAt(background.data, background.info.width, x, y);
+      if (colorDistance(indicator, outline) <= 8 && colorDistance(indicator, behindIndicator) >= 16) {
+        ratios.push(contrastRatio(indicator, behindIndicator));
+      }
+    }
+  }
+  expect(ratios.length, `${label} must render solid focus-indicator pixels`).toBeGreaterThan(0);
+  expect(Math.min(...ratios), `${label} rendered focus-indicator contrast`).toBeGreaterThanOrEqual(3);
 }
 
 function expectRectClose(
@@ -140,102 +163,31 @@ async function injectProjectFixtures(page: Page, count: 5 | 6) {
   }, count);
 }
 
-test("dark theme keeps focused navigation, text, focus ring, and glass surfaces readable", async ({ page }) => {
-  await page.emulateMedia({ colorScheme: "dark" });
+test("dark theme uses final rendered pixels for text and focus contrast", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "networkidle" });
 
   const skipLink = page.locator(".skip-link");
   await skipLink.focus();
   await expect(skipLink).toBeFocused();
-  const skipStyle = await skipLink.evaluate((element) => {
-    const style = getComputedStyle(element);
-    return { color: style.color, backgroundColor: style.backgroundColor };
-  });
-  expect(contrastRatio(skipStyle.color, skipStyle.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+  await expectRenderedTextContrast(skipLink, "focused skip link");
+  await expectRenderedFocusIndicator(skipLink, "focused skip link");
+
+  const textSamples = [
+    { locator: page.locator(".identity-bar-motion h1"), label: "identity heading" },
+    { locator: page.locator(".identity-bar-motion a").first(), label: "identity link" },
+    { locator: page.locator("#education-title"), label: "history heading" },
+    { locator: page.locator(".profile-history-motion p").first(), label: "history text" },
+    { locator: page.locator(".case-card-summary").first(), label: "project description" },
+  ];
+  for (const sample of textSamples) {
+    await expectRenderedTextContrast(sample.locator, sample.label);
+  }
 
   const card = page.getByRole("button", { name: "查看项目详情：秋招网申助手" });
   await card.focus();
   await expect(card).toBeFocused();
-  const [identityBox, historyBox, cardBox] = await Promise.all([
-    page.locator(".identity-bar-motion").boundingBox(),
-    page.locator(".profile-history-motion").boundingBox(),
-    card.boundingBox(),
-  ]);
-  expect(identityBox).not.toBeNull();
-  expect(historyBox).not.toBeNull();
-  expect(cardBox).not.toBeNull();
-
-  const styles = await page.evaluate(() => {
-    const root = getComputedStyle(document.documentElement);
-    const style = (selector: string) => getComputedStyle(document.querySelector(selector)!);
-    const body = style("body");
-    const identity = style(".identity-bar-motion");
-    const history = style(".profile-history-motion");
-    const card = style(".case-card");
-    return {
-      pageMetrics: {
-        width: document.body.getBoundingClientRect().width,
-        height: document.body.getBoundingClientRect().height,
-        rootFontSize: Number.parseFloat(root.fontSize),
-      },
-      pageColors: {
-        base: root.getPropertyValue("--portfolio-background"),
-        primary: root.getPropertyValue("--portfolio-ambient-primary"),
-        secondary: root.getPropertyValue("--portfolio-ambient-secondary"),
-        texture: root.getPropertyValue("--portfolio-texture"),
-      },
-      body: { color: body.color, backgroundColor: body.backgroundColor },
-      identity: {
-        textColors: Array.from(document.querySelectorAll(".identity-bar-motion h1, .identity-bar-motion a"))
-          .map((element) => getComputedStyle(element).color),
-        backgroundColor: identity.backgroundColor,
-      },
-      history: {
-        textColors: Array.from(document.querySelectorAll(".profile-history-motion h2, .profile-history-motion strong, .profile-history-motion span, .profile-history-motion time, .profile-history-motion p"))
-          .map((element) => getComputedStyle(element).color),
-        backgroundColor: history.backgroundColor,
-      },
-      card: {
-        backgroundColor: card.backgroundColor,
-        outlineColor: card.outlineColor,
-        summaryColor: style(".case-card-summary").color,
-      },
-    };
-  });
-
-  const identityPoints = surfaceSamplePoints(identityBox!);
-  const historyPoints = surfaceSamplePoints(historyBox!);
-  expect(parseColor(styles.body.backgroundColor).alpha).toBe(1);
-  expect(parseColor(styles.identity.backgroundColor).alpha).toBeGreaterThanOrEqual(0.8);
-  expect(parseColor(styles.history.backgroundColor).alpha).toBeGreaterThanOrEqual(0.8);
-  expect(parseColor(styles.card.backgroundColor).alpha).toBe(1);
-  expect(contrastRatio(styles.body.color, styles.body.backgroundColor)).toBeGreaterThanOrEqual(4.5);
-  expect(styles.identity.textColors).not.toHaveLength(0);
-  for (const textColor of styles.identity.textColors) {
-    expectReadableOnSurface(
-      textColor,
-      styles.identity.backgroundColor,
-      identityPoints,
-      styles.pageMetrics,
-      styles.pageColors,
-    );
-  }
-  expect(styles.history.textColors).not.toHaveLength(0);
-  for (const textColor of styles.history.textColors) {
-    expectReadableOnSurface(
-      textColor,
-      styles.history.backgroundColor,
-      historyPoints,
-      styles.pageMetrics,
-      styles.pageColors,
-    );
-  }
-  expect(contrastRatio(styles.card.summaryColor, styles.card.backgroundColor)).toBeGreaterThanOrEqual(4.5);
-  expect(parseColor(styles.card.outlineColor).alpha).toBe(1);
-  const focusBackgrounds = surfaceSamplePoints(cardBox!)
-    .flatMap((point) => effectivePageBackgroundsAt(point, styles.pageMetrics, styles.pageColors));
-  expect(Math.min(...focusBackgrounds.map((background) => contrastRatio(styles.card.outlineColor, background))))
-    .toBeGreaterThanOrEqual(3);
+  await expectRenderedFocusIndicator(card, "focused project card");
 });
 
 for (const viewport of viewports) {
@@ -269,6 +221,7 @@ for (const viewport of viewports) {
 }
 
 test("company logo failure preserves the successful row, slot, and company text geometry", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "networkidle" });
 
   const row = page.getByTestId("experience-row").first();
@@ -281,8 +234,12 @@ test("company logo failure preserves the successful row, slot, and company text 
     const effects = [];
     for (let node: Element | null = image; node; node = node.parentElement) {
       const style = getComputedStyle(node);
-      effects.push({ opacity: style.opacity, filter: style.filter, mixBlendMode: style.mixBlendMode });
-      if (node.matches('[data-testid="experience-row"]')) break;
+      effects.push({
+        nodeName: node === document.documentElement ? "html" : node.tagName.toLowerCase(),
+        opacity: style.opacity,
+        filter: style.filter,
+        mixBlendMode: style.mixBlendMode,
+      });
     }
     return {
       complete: image.complete,
@@ -295,6 +252,7 @@ test("company logo failure preserves the successful row, slot, and company text 
   expect(imageState.naturalWidth).toBeGreaterThan(0);
   expect(imageState.objectFit).toBe("contain");
   expect(imageState.effects).not.toHaveLength(0);
+  expect(imageState.effects.at(-1)?.nodeName).toBe("html");
   expect(imageState.effects.every(({ opacity }) => opacity === "1")).toBe(true);
   expect(imageState.effects.every(({ filter }) => filter === "none")).toBe(true);
   expect(imageState.effects.every(({ mixBlendMode }) => mixBlendMode === "normal")).toBe(true);
