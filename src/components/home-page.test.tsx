@@ -65,71 +65,43 @@ describe("site shell", () => {
     expect(metadata.description).toContain("个人项目案例");
   });
 
-  it("provides a skip link and approved navigation", () => {
+  it("keeps the skip link and removes directory navigation", () => {
     const page = renderLayout();
-
     expect(page.querySelector('a[href="#main-content"]')?.textContent).toContain("跳到主要内容");
-    expect(page.querySelector('a[href="#cases"]')?.textContent).toContain("案例");
-    expect(page.querySelector('a[href="#experience"]')?.textContent).toContain("经历");
-    expect(page.querySelector('a[href="#contact"]')?.textContent).toContain("联系");
-  });
-
-  it("ends the complete page at the contact region without a footer or copyright", () => {
-    const page = renderLayout(<Home />);
-    const main = page.querySelector("#main-content");
-    const contact = page.querySelector('#contact[aria-label="联系"]');
-
-    expect(main).not.toBeNull();
-    expect(contact).not.toBeNull();
-    expect(main?.lastElementChild).toBe(contact);
-    expect(page.querySelector("footer")).toBeNull();
-    expect(page.body.textContent).not.toMatch(/©\s*2026\s*董星/);
+    expect(page.querySelector('nav[aria-label="主要导航"]')).toBeNull();
+    expect(page.querySelector('a[href="#experience"]')).toBeNull();
+    expect(page.querySelector('a[href="#cases"]')).toBeNull();
+    expect(page.querySelector('a[href="#contact"]')).toBeNull();
   });
 });
 
 describe("home page", () => {
-  it("keeps all four hero copy elements in ordered stagger items", () => {
+  it("renders a compact identity bar without the removed hero statement", () => {
     render(<Home />);
 
-    const group = document.querySelector(".hero-copy-motion");
-    const items = within(group as HTMLElement).getAllByTestId("stagger-item");
-    expect(items).toHaveLength(4);
-    expect(items.map((item) => item.textContent)).toEqual([
-      "AI 产品经理",
-      "认真体验，持续表达",
-      "把 AI 能力接入真实工作流，用产品与数据持续验证价值。",
-      "查看项目",
-    ]);
+    const identity = screen.getByRole("region", { name: "个人信息" });
+    expect(within(identity).getByRole("heading", { level: 1, name: "董星" })).toBeInTheDocument();
+    expect(within(identity).getByText("AI 产品经理与独立开发者")).toBeInTheDocument();
+    expect(within(identity).getByRole("link", { name: "发送邮件" })).toHaveAttribute(
+      "href",
+      "mailto:dongxing.123@bytedance.com",
+    );
+    expect(within(identity).getByRole("link", { name: "访问 GitHub（新窗口）" })).toHaveAttribute(
+      "href",
+      "https://github.com/aurostars",
+    );
+    expect(screen.queryByText("认真体验，持续表达")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "查看项目" })).not.toBeInTheDocument();
   });
 
-  it("stagger-reveals all five experience rows at 0.05 second intervals", () => {
+  it("renders semantic education and five concise internship rows", () => {
     render(<Home />);
 
-    const group = document.querySelector(".hero-experience-list");
-    expect(group).toHaveAttribute("data-stagger-children", "0.05");
-    expect(within(group as HTMLElement).getAllByTestId("stagger-item")).toHaveLength(5);
-    expect(within(group as HTMLElement).getAllByTestId("experience-row")).toHaveLength(5);
-  });
-
-  it("reveals project cards with delays increasing in global DOM order", () => {
-    render(<Home />);
-
-    expect(screen.getByRole("region", { name: "个人项目" })).toHaveAttribute("id", "cases");
-    const cards = Array.from(document.querySelectorAll(".case-card-motion"));
-    expect(cards.map((card) => card.getAttribute("data-delay"))).toEqual(["0", "0.06", "0.12", "0.18"]);
-    expect(cards.every((card) => card.parentElement?.classList.contains("case-row"))).toBe(true);
-  });
-
-  it("renders the personal statement and profile index in the hero", () => {
-    render(<Home />);
-
-    const hero = screen.getByRole("region", { name: "认真体验，持续表达" });
-    expect(within(hero).getByRole("heading", { level: 1, name: "认真体验，持续表达" })).toBeInTheDocument();
-    expect(within(hero).getByRole("link", { name: "查看项目" })).toHaveAttribute("href", "#cases");
-    expect(within(hero).getByRole("region", { name: "经历" })).toHaveAttribute("id", "experience");
-    expect(within(hero).getAllByTestId("hero-education-row")).toHaveLength(2);
-    expect(within(hero).getAllByTestId("experience-row")).toHaveLength(5);
-    expect(within(hero).queryByRole("group", { name: "个人项目界面预览" })).not.toBeInTheDocument();
+    const history = screen.getByRole("region", { name: "教育与实习经历" });
+    expect(within(history).getByRole("heading", { level: 2, name: "教育经历" })).toBeInTheDocument();
+    expect(within(history).getAllByTestId("education-row")).toHaveLength(2);
+    expect(within(history).getAllByTestId("experience-row")).toHaveLength(5);
+    expect(within(history).getAllByText(/时间|公司|岗位|职责/).length).toBeGreaterThan(0);
   });
 
   it("labels the project section without the removed helper copy", () => {
@@ -312,37 +284,10 @@ describe("home page", () => {
     expect(cards[5].parentElement?.nextElementSibling).toBe(detail);
   });
 
-  it("keeps only the approved contact block after personal projects", () => {
-    render(<Home />);
-
-    const contact = screen.getByRole("region", { name: "联系" });
-    expect(within(contact).getByRole("heading", { name: "欢迎联系～" })).toBeInTheDocument();
-    expect(within(contact).getAllByRole("link")).toHaveLength(2);
-    expect(screen.queryByRole("region", { name: "经历与能力" })).not.toBeInTheDocument();
-    expect(document.querySelectorAll("[data-experience-row]")).toHaveLength(5);
-  });
-
   it("renders exactly one case card per project and no future placeholders", () => {
     const { container } = render(<Home />);
     expect(container.querySelectorAll(".case-card")).toHaveLength(4);
     expect(screen.queryByText(/未来案例|待添加/)).not.toBeInTheDocument();
-  });
-
-  it("renders five concise experience rows", () => {
-    render(<Home />);
-    const section = screen.getByRole("region", { name: "经历" });
-    expect(section.querySelectorAll("[data-experience-row]")).toHaveLength(5);
-    expect(section.textContent).not.toContain("产品设计：");
-  });
-
-  it("limits contact to email and GitHub", () => {
-    render(<Home />);
-    const section = screen.getByRole("region", { name: "联系" });
-    expect(section.querySelectorAll("a")).toHaveLength(2);
-    expect(screen.getByRole("link", { name: "发送邮件" })).toHaveAttribute("href", "mailto:dongxing.123@bytedance.com");
-    expect(screen.getByRole("link", { name: "访问 GitHub" })).toHaveAttribute("href", "https://github.com/aurostars");
-    expect(section.querySelector("form")).not.toBeInTheDocument();
-    expect(section.textContent).not.toMatch(/电话|微信|微博|LinkedIn/);
   });
 
   it("ships the social preview image referenced by metadata", () => {

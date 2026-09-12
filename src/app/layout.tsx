@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
-import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -36,7 +35,6 @@ export default function RootLayout({
         <a className="skip-link" href="#main-content">
           跳到主要内容
         </a>
-        <SiteHeader />
         <main id="main-content">{children}</main>
       </body>
     </html>
