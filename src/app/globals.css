@@ -323,27 +323,35 @@ button:focus-visible {
 }
 
 .case-dialog {
-  width: min(76vw, 1100px);
+  width: min(calc(100vw - 2rem), 60rem);
   max-width: none;
-  max-height: calc(100dvh - 48px);
+  max-height: 86dvh;
+  margin: auto;
   padding: 0;
   border: 0;
-  border-radius: 1.25rem;
+  border-radius: 1rem;
   background: transparent;
   color: inherit;
   overflow: hidden;
 }
 
 .case-dialog::backdrop {
-  background: rgb(15 23 42 / 0.5);
-  backdrop-filter: blur(6px);
+  background: rgb(15 23 42 / 0.54);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 .case-dialog-panel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  max-height: calc(100dvh - 48px);
-  background: var(--color-surface);
+  max-height: 86dvh;
+  border: 1px solid var(--portfolio-highlight);
+  border-radius: inherit;
+  background: var(--portfolio-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(125%);
+  backdrop-filter: blur(24px) saturate(125%);
+  box-shadow: 0 28px 80px rgb(24 58 101 / 0.24), inset 0 1px 0 var(--portfolio-highlight);
+  overflow: hidden;
 }
 
 .case-dialog-header {
@@ -356,7 +364,7 @@ button:focus-visible {
   gap: 1rem;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: var(--portfolio-glass);
 }
 
 .case-dialog-header h2 {
@@ -629,14 +637,18 @@ button:focus-visible {
 
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .identity-bar-motion,
-  .profile-history-motion {
+  .profile-history-motion,
+  .case-dialog-panel,
+  .case-dialog-header {
     background: var(--color-surface-muted);
   }
 }
 
 @media (prefers-reduced-transparency: reduce) {
   .identity-bar-motion,
-  .profile-history-motion {
+  .profile-history-motion,
+  .case-dialog-panel,
+  .case-dialog-header {
     background: var(--color-surface-muted);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;

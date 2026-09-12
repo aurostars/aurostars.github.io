@@ -96,7 +96,7 @@ test("detail gallery preserves complete product screenshots", async ({ page }) =
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
   const galleryImages = page.locator(".case-gallery img");
-  await expect(galleryImages).toHaveCount(4);
+  await expect(galleryImages).toHaveCount(2);
   await expect(galleryImages.first()).toHaveCSS("object-fit", "contain");
   await expect(galleryImages.nth(1)).toHaveCSS("object-fit", "contain");
 
@@ -106,13 +106,29 @@ test("detail gallery preserves complete product screenshots", async ({ page }) =
 
 test("detail image failure keeps a stable 16:9 frame", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.route("**/projects/job-application-helper/icon.png", (route) => route.abort());
+  await page.route("**/projects/job-application-helper/extension-popup.png", (route) => route.abort());
   await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
-  await expect(page.getByRole("img", { name: "秋招网申助手的浏览器扩展图标加载失败" })).toBeVisible();
-  const box = await page.locator(".case-gallery .project-image-frame").first().boundingBox();
+  const gallery = page.getByRole("group", { name: "秋招网申助手真实产品界面" });
+  await expect(gallery.getByRole("img", { name: "秋招网申助手点击扩展后打开的界面加载失败" })).toBeVisible();
+  const box = await gallery.locator(".project-image-frame").first().boundingBox();
   expect(box).not.toBeNull();
   expect(box!.height).toBeGreaterThan(0);
   expect(box!.width / box!.height).toBeCloseTo(16 / 9, 1);
+});
+
+test("centers the native dialog in the viewport at desktop widths", async ({ page }) => {
+  for (const viewport of viewports.filter(({ width }) => width >= 768)) {
+    await page.setViewportSize(viewport);
+    await page.goto("/", { waitUntil: "networkidle" });
+    await page.getByRole("button", { name: "查看项目详情：秋招网申助手" }).click();
+
+    const dialog = page.locator("dialog.case-dialog");
+    await expect(dialog).toBeVisible();
+    const box = await dialog.boundingBox();
+    expect(box).not.toBeNull();
+    expect(Math.abs(box!.x + box!.width / 2 - viewport.width / 2)).toBeLessThanOrEqual(2);
+    expect(Math.abs(box!.y + box!.height / 2 - viewport.height / 2)).toBeLessThanOrEqual(2);
+  }
 });
 
 test("opens, deep-links, restores history, focus, and body scrolling", async ({ page }) => {
@@ -141,15 +157,26 @@ test("direct project URL closes to overview and focuses project heading", async 
   await expect(page.getByRole("heading", { name: "个人项目" })).toBeFocused();
 });
 
-test("mobile dialog stays inside dynamic viewport and keeps close visible", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/?project=resume-builder", { waitUntil: "networkidle" });
-  const dialog = page.getByRole("dialog", { name: "智能简历编辑工具" });
-  const box = await dialog.boundingBox();
-  expect(box).not.toBeNull();
-  expect(box!.x).toBeGreaterThanOrEqual(0);
-  expect(box!.y).toBeGreaterThanOrEqual(0);
-  expect(box!.x + box!.width).toBeLessThanOrEqual(390);
-  expect(box!.y + box!.height).toBeLessThanOrEqual(844);
-  await expect(page.getByRole("button", { name: "关闭智能简历编辑工具详情" })).toBeVisible();
+test("mobile dialog stays inside dynamic viewport and scrolls internally", async ({ page }) => {
+  for (const viewport of viewports.filter(({ width }) => width <= 390)) {
+    await page.setViewportSize(viewport);
+    await page.goto("/?project=resume-builder", { waitUntil: "networkidle" });
+    const dialog = page.getByRole("dialog", { name: "智能简历编辑工具" });
+    const box = await dialog.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.y).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+    await expect(page.getByRole("button", { name: "关闭智能简历编辑工具详情" })).toBeVisible();
+
+    const scrollMetrics = await dialog.locator(".case-dialog-scroll").evaluate((node) => ({
+      clientHeight: node.clientHeight,
+      overflowY: getComputedStyle(node).overflowY,
+      scrollHeight: node.scrollHeight,
+    }));
+    expect(scrollMetrics.overflowY).toBe("auto");
+    expect(scrollMetrics.scrollHeight).toBeGreaterThan(scrollMetrics.clientHeight);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+  }
 });
