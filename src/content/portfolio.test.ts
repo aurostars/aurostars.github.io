@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import * as portfolio from "./portfolio";
 import { contact, education, experiences, portfolioCases } from "./portfolio";
 
+const remoteSvgResource = /(?:\bhref|\bxlink:href)\s*=\s*(?:["']\s*)?https?:/i;
+
 const expectedSlugs = [
   "job-application-helper",
   "interview-review",
@@ -157,6 +159,15 @@ describe("portfolio content", () => {
   });
 
   it("keeps both school SVGs self-contained, script-free, square, and on-brand", () => {
+    for (const unsafeReference of [
+      'href="https://example.com/asset.svg"',
+      "xlink:href = ' http://example.com/asset.svg'",
+      "href=   https://example.com/asset.svg",
+      "xlink:href\t=\tHTTP://example.com/asset.svg",
+    ]) {
+      expect(unsafeReference).toMatch(remoteSvgResource);
+    }
+
     const emblems = [
       { src: "/schools/beijing-normal-university.svg", brandColor: "#004ea2" },
       { src: "/schools/renmin-university-of-china.svg", brandColor: "#ad0b2a" },
@@ -166,7 +177,7 @@ describe("portfolio content", () => {
       const svg = readFileSync(join(process.cwd(), "public", emblem.src.replace(/^\//, "")), "utf8");
       expect(svg).not.toMatch(/<script\b/i);
       expect(svg).not.toMatch(/<foreignObject\b/i);
-      expect(svg).not.toMatch(/(?:href|xlink:href)\s*=\s*["']https?:/i);
+      expect(svg).not.toMatch(remoteSvgResource);
       expect(svg).not.toMatch(/@font-face/i);
       expect(svg.toLowerCase()).toContain(emblem.brandColor);
 

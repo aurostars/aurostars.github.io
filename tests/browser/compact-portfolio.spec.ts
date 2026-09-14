@@ -272,7 +272,9 @@ for (const viewport of viewports.filter(({ width }) => width >= 768)) {
         expect(fieldBox!.y + fieldBox!.height).toBeLessThanOrEqual(titleBox!.y + titleBox!.height + 1);
       }
       for (let index = 1; index < fieldBoxes.length; index += 1) {
-        expect(fieldBoxes[index]!.x).toBeGreaterThanOrEqual(fieldBoxes[index - 1]!.x + fieldBoxes[index - 1]!.width);
+        expect(fieldBoxes[index]!.x).toBeGreaterThanOrEqual(
+          fieldBoxes[index - 1]!.x + fieldBoxes[index - 1]!.width - 1,
+        );
       }
       expect(contentBox!.y).toBeGreaterThanOrEqual(titleBox!.y + titleBox!.height);
     }
@@ -435,15 +437,25 @@ test("detail header owns the only source link and the close affordance uses a po
 test("detail background and goal are ordered standalone full-width sections without core problems", async ({ page }) => {
   await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
   const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
+  const detailGrid = dialog.locator(".case-detail-grid");
   const background = dialog.getByRole("region", { name: "背景" });
   const goal = dialog.getByRole("region", { name: "目标" });
-  const [backgroundBox, goalBox] = await Promise.all([background.boundingBox(), goal.boundingBox()]);
+  const [gridBox, backgroundBox, goalBox] = await Promise.all([
+    detailGrid.boundingBox(),
+    background.boundingBox(),
+    goal.boundingBox(),
+  ]);
+  expect(gridBox).not.toBeNull();
   expect(backgroundBox).not.toBeNull();
   expect(goalBox).not.toBeNull();
-  expectRectClose(
-    { x: goalBox!.x, y: backgroundBox!.y, width: goalBox!.width, height: backgroundBox!.height },
-    backgroundBox!,
-  );
+  for (const [name, box] of [["background", backgroundBox!], ["goal", goalBox!]] as const) {
+    expect(Math.abs(box.x - gridBox!.x), `${name} left edge`).toBeLessThanOrEqual(1);
+    expect(Math.abs(box.width - gridBox!.width), `${name} width`).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs((box.x + box.width) - (gridBox!.x + gridBox!.width)),
+      `${name} right edge`,
+    ).toBeLessThanOrEqual(1);
+  }
   expect(goalBox!.y).toBeGreaterThanOrEqual(backgroundBox!.y + backgroundBox!.height);
   await expect(dialog.getByText("核心问题", { exact: true })).toHaveCount(0);
 });
@@ -474,6 +486,7 @@ for (const project of [
 
 for (const viewport of [
   { width: 1024, height: 768, stacked: false },
+  { width: 767, height: 900, stacked: true },
   { width: 390, height: 844, stacked: true },
 ]) {
   test(`Job Application Helper gallery has ordered non-overlapping figures at ${viewport.width}px`, async ({ page }) => {

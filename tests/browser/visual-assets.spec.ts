@@ -86,17 +86,26 @@ for (const colorScheme of ["light", "dark"] as const) {
       await expect(emblem).toHaveCSS("object-fit", "contain");
       expect(await emblem.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
 
-      const screenshot = await sharp(await slot.screenshot({ animations: "disabled" })).ensureAlpha().raw()
+      const [emblemHandle, slotHandle] = await Promise.all([emblem.elementHandle(), slot.elementHandle()]);
+      expect(emblemHandle).not.toBeNull();
+      expect(slotHandle).not.toBeNull();
+      const visible = await sharp(await slotHandle!.screenshot({ animations: "disabled" })).ensureAlpha().raw()
         .toBuffer({ resolveWithObject: true });
-      const background = [screenshot.data[0], screenshot.data[1], screenshot.data[2]];
-      let contrastingPixels = 0;
-      for (let offset = 0; offset < screenshot.data.length; offset += screenshot.info.channels) {
-        const pixel = [screenshot.data[offset], screenshot.data[offset + 1], screenshot.data[offset + 2]];
-        if (distance(pixel, background) > 35) contrastingPixels += 1;
+      await emblemHandle!.evaluate((image) => { image.style.visibility = "hidden"; });
+      const hidden = await sharp(await slotHandle!.screenshot({ animations: "disabled" })).ensureAlpha().raw()
+        .toBuffer({ resolveWithObject: true });
+      await emblemHandle!.evaluate((image) => { image.style.visibility = ""; });
+      expect(visible.info).toEqual(hidden.info);
+
+      let changedPixels = 0;
+      for (let offset = 0; offset < visible.data.length; offset += visible.info.channels) {
+        const renderedPixel = [visible.data[offset], visible.data[offset + 1], visible.data[offset + 2]];
+        const hiddenPixel = [hidden.data[offset], hidden.data[offset + 1], hidden.data[offset + 2]];
+        if (distance(renderedPixel, hiddenPixel) > 20) changedPixels += 1;
       }
       expect(
-        contrastingPixels / (screenshot.info.width * screenshot.info.height),
-        `${name} should remain visibly distinct from its plate in ${colorScheme} mode`,
+        changedPixels / (visible.info.width * visible.info.height),
+        `${name} should produce meaningful same-slot pixel differences in ${colorScheme} mode`,
       ).toBeGreaterThan(0.01);
     }
   });
@@ -107,13 +116,24 @@ test("failed school emblem preserves its row, slot, and school name geometry", a
   await page.goto("/", { waitUntil: "networkidle" });
   const row = page.getByTestId("education-row").first();
   const slot = row.locator(".school-logo-slot");
+  const emblem = row.getByRole("img", { name: "北京师范大学校徽" });
   const school = row.getByText("北京师范大学", { exact: true });
+  await expect(emblem).toBeVisible();
+  expect(await emblem.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
   const loaded = await Promise.all([row.boundingBox(), slot.boundingBox(), school.boundingBox()]);
   expect(loaded.every(Boolean)).toBe(true);
 
-  await page.route("**/schools/beijing-normal-university.svg", (route) => route.abort("failed"));
+  let routeHits = 0;
+  let abortedRequests = 0;
+  await page.route("**/schools/beijing-normal-university.svg", async (route) => {
+    routeHits += 1;
+    await route.abort("failed");
+    abortedRequests += 1;
+  });
   await page.reload({ waitUntil: "networkidle" });
-  await expect(row.getByRole("img", { name: "北京师范大学校徽" })).toHaveCount(0);
+  expect(routeHits, "the target school emblem request should hit the failure route").toBeGreaterThan(0);
+  expect(abortedRequests, "every intercepted target request should be aborted").toBe(routeHits);
+  await expect(emblem).toHaveCount(0);
   await expect(school).toBeVisible();
   const failed = await Promise.all([row.boundingBox(), slot.boundingBox(), school.boundingBox()]);
   expect(failed.every(Boolean)).toBe(true);
