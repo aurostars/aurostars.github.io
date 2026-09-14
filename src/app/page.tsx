@@ -207,24 +207,39 @@ export default function Home() {
           {[
             {
               school: "北京师范大学",
-              degree: "硕士 · 理论经济学",
+              details: ["理论经济学 硕士"],
               period: "2024.09 - 2027.06",
-              color: "from-blue-500 to-purple-500",
+              logo: "/logos/bnu.png",
             },
             {
               school: "中国人民大学",
-              degree: "本科 · 劳动经济学",
+              details: ["劳动人事学院", "经济学 学士"],
               period: "2020.09 - 2024.06",
-              color: "from-purple-500 to-pink-500",
+              logo: "/logos/ruc.png",
             },
           ].map((edu, i) => (
             <Animate key={edu.school} delay={i * 150}>
-              <div className="glass rounded-2xl p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-lg hover:shadow-blue-500/5 h-full">
-                <div className={`inline-block rounded-lg bg-gradient-to-r ${edu.color} px-3 py-1 text-xs font-medium text-white`}>
-                  {edu.period}
+              <div className="glass flex h-full items-center gap-4 rounded-2xl p-5 sm:gap-5 sm:p-6">
+                <div className="flex h-20 w-20 shrink-0 items-center justify-center sm:h-24 sm:w-24">
+                  <Image
+                    src={edu.logo}
+                    alt={`${edu.school}校徽`}
+                    width={96}
+                    height={96}
+                    className="h-full w-full object-contain"
+                  />
                 </div>
-                <h3 className="mt-3 text-lg font-semibold text-slate-100">{edu.school}</h3>
-                <p className="mt-1 text-sm text-slate-400">{edu.degree}</p>
+                <div className="min-w-0">
+                  <div className="inline-block rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 px-3 py-1 text-xs font-medium text-white">
+                    {edu.period}
+                  </div>
+                  <h3 className="mt-3 text-lg font-semibold text-slate-100">{edu.school}</h3>
+                  <div className="mt-1 space-y-1">
+                    {edu.details.map((detail) => (
+                      <p key={detail} className="text-sm text-slate-400">{detail}</p>
+                    ))}
+                  </div>
+                </div>
               </div>
             </Animate>
           ))}
