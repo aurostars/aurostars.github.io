@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { Animate } from "@/components/animate";
 
 export default function Home() {
@@ -102,14 +104,13 @@ export default function Home() {
           <p className="mt-2 text-sm text-slate-500">产品与数据驱动的实战经验</p>
         </Animate>
 
-        <div className="relative mt-8 pl-10">
-          <div className="timeline-line"></div>
+        <div className="mt-8">
           {[
             {
               date: "2026.03 - 2026.07",
               company: "科大讯飞",
               role: "AI产品经理",
-              color: "bg-blue-500",
+              logo: "/logos/iflytek.png",
               highlights: [
                 "产品设计：参与多模态心脏超声智能报告系统从0到1设计与落地。基于超声检查缺少录入员的场景痛点，明确智能报告系统替代录入员的产品定位，切入真实检查工作流，完成超声助理、预后决策、历史报告管理、后台管理等核心功能规划，基于医生角色设计使用界面及权限体系。",
                 "模型评测：联合算法与医生构建模型评测体系，定义准确率、完整性、一致性等核心指标与分级标准，设计LLM-as-a-Judge评测方案，推动自动化评测+专家抽测双轨流程，人机一致率达90%+，为模型选优、版本迭代提供量化决策依据。",
@@ -121,7 +122,7 @@ export default function Home() {
               date: "2025.10 - 2026.01",
               company: "美团快驴",
               role: "产品运营",
-              color: "bg-teal-500",
+              logo: "/logos/meituan.png",
               highlights: [
                 "数据支持：独立负责业务数据支持，编写SQL完成数据提取与清洗，搭建并持续优化3个核心数据看板，支撑业务效率提升。",
                 "指标监控与归因分析：搭建核心指标（客诉情况）日级监控机制，识别关键异常，针对异常波动深入下探归因，沿物流、质检、供应商等环节定位问题，协同负责人推动改善方案落地。",
@@ -132,7 +133,7 @@ export default function Home() {
               date: "2025.06 - 2025.09",
               company: "国务院发展研究中心大数据研究院",
               role: "产品经理",
-              color: "bg-purple-500",
+              logo: "/logos/drc-big-data.png",
               highlights: [
                 "产品设计：深度参与面向政府决策者的大数据可视化平台产品迭代，将需求拆解为可量化的指标体系与可视化方案，完成从场景调研、指标构建到交互原型的闭环交付。",
                 "项目推进与团队协同：拉通研究员、开发、设计等多角色，跟进开发、测试、上线全链路，保障20+项需求按期高质量交付。",
@@ -143,7 +144,7 @@ export default function Home() {
               date: "2023.10 - 2024.01",
               company: "BOSS直聘",
               role: "行业与产品研究",
-              color: "bg-pink-500",
+              logo: "/logos/boss-zhipin.png",
               highlights: [
                 "知识库体系建设：基于高频模糊职位匹配率低的痛点，进行内部数据分析、用户访谈、专家访谈及竞品研究，完成互联网、餐饮、生活服务等行业内10+核心职位的知识库建设。",
                 "产品策略与方案落地：基于知识库洞察，输出产品优化方案并主导上线，涵盖10+职位的细化分类体系设计、多维度标签搭建及发布流程优化，各职位匹配成功率提升30%+。",
@@ -154,7 +155,7 @@ export default function Home() {
               date: "2023.03 - 2023.06",
               company: "太平洋证券研究所",
               role: "行业研究",
-              color: "bg-amber-500",
+              logo: "/logos/pacific-securities.png",
               highlights: [
                 "数据收集与处理：运用Wind、iFinD等数据库及公开信息渠道，收集与整合目标行业及公司的基本面数据，为研究提供可靠数据基础。",
                 "深度研究报告撰写：深度参与撰写3篇公司和行业深度报告，在公司报告中，独立完成基本情况、治理结构、财务表现、业务与竞争分析、战略规划部分；在行业报告中，独立完成周期研判、趋势分析及重点公司对比部分。",
@@ -164,18 +165,29 @@ export default function Home() {
             },
           ].map((item, i) => (
             <Animate key={item.company} type="fade-left" delay={i * 150}>
-              <div className="relative mb-8 last:mb-0">
-                <div className="absolute -left-10 top-1.5">
-                  <div className={`timeline-dot ${item.color}`}></div>
-                </div>
-                <div className="glass rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5">
-                  <p className="text-xs font-medium text-blue-400">{item.date}</p>
-                  <p className="mt-1 font-semibold text-slate-200">{item.company} · {item.role}</p>
-                  <ul className="mt-2 space-y-1">
-                    {item.highlights.map((h) => (
-                      <li key={h} className="text-sm text-slate-400 leading-relaxed">• {h}</li>
-                    ))}
-                  </ul>
+              <div className="mb-8 last:mb-0">
+                <div className="glass grid grid-cols-[3.5rem_minmax(0,1fr)] gap-4 rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5 sm:grid-cols-[4rem_minmax(0,1fr)] sm:gap-5">
+                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-white p-1.5 sm:h-16 sm:w-16">
+                    <Image
+                      src={item.logo}
+                      alt={`${item.company} Logo`}
+                      width={64}
+                      height={64}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="grid gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1.2fr)_minmax(8rem,0.8fr)_auto] sm:items-center">
+                      <p className="font-semibold text-slate-200">{item.company}</p>
+                      <p className="text-sm text-slate-300 sm:text-left">{item.role}</p>
+                      <p className="text-xs font-medium text-blue-400 sm:text-right">{item.date}</p>
+                    </div>
+                    <ul className="mt-3 space-y-1">
+                      {item.highlights.map((h) => (
+                        <li key={h} className="text-sm text-slate-400 leading-relaxed">• {h}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
             </Animate>

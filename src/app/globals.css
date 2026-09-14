@@ -89,24 +89,6 @@ body {
   50% { opacity: 1; }
 }
 
-/* Timeline */
-.timeline-line {
-  position: absolute;
-  left: 7px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(to bottom, rgba(96, 165, 250, 0.3), rgba(168, 85, 247, 0.3), transparent);
-}
-
-.timeline-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid rgba(10, 10, 15, 1);
-  box-shadow: 0 0 10px currentColor;
-}
-
 /* Scroll animations */
 .fade-up {
   opacity: 0;
