@@ -246,8 +246,8 @@ for (const viewport of [
   });
 }
 
-for (const viewport of viewports.filter(({ width }) => width >= 768)) {
-  test(`${viewport.width}px keeps desktop experience identity fields on one row above their content`, async ({ page }) => {
+for (const viewport of viewports.filter(({ width }) => width > 900)) {
+  test(`${viewport.width}px keeps wide desktop experience identity fields on one row above their content`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto("/", { waitUntil: "networkidle" });
 
@@ -276,7 +276,50 @@ for (const viewport of viewports.filter(({ width }) => width >= 768)) {
           fieldBoxes[index - 1]!.x + fieldBoxes[index - 1]!.width - 1,
         );
       }
-      expect(contentBox!.y).toBeGreaterThanOrEqual(titleBox!.y + titleBox!.height);
+      expect(contentBox!.y).toBeGreaterThanOrEqual(titleBox!.y + titleBox!.height - 1);
+    }
+  });
+}
+
+for (const width of [768, 900]) {
+  test(`${width}px keeps complete organization and role text before work content`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    for (const organization of ["国务院发展研究中心大数据研究院", "太平洋证券研究所"]) {
+      await expect(page.getByText(organization, { exact: true })).toBeVisible();
+    }
+    for (const row of await page.getByTestId("experience-row").all()) {
+      const titleLine = row.getByTestId("experience-title-line");
+      const organizationElement = titleLine.locator(".experience-organization");
+      const role = titleLine.locator(".experience-role");
+      const period = titleLine.locator(".experience-period");
+      const content = row.locator(".experience-highlight");
+      const [organization, organizationSize, roleSize, titleBox, organizationBox, roleBox, periodBox, contentBox] = await Promise.all([
+        organizationElement.textContent(),
+        organizationElement.evaluate((element) => ({ clientWidth: element.clientWidth, scrollWidth: element.scrollWidth })),
+        role.evaluate((element) => ({ clientWidth: element.clientWidth, scrollWidth: element.scrollWidth })),
+        titleLine.boundingBox(),
+        organizationElement.boundingBox(),
+        role.boundingBox(),
+        period.boundingBox(),
+        content.boundingBox(),
+      ]);
+
+      expect(organizationSize.scrollWidth, `${organization} must not be horizontally clipped`).toBeLessThanOrEqual(organizationSize.clientWidth);
+      expect(roleSize.scrollWidth, `${organization} role must not be horizontally clipped`).toBeLessThanOrEqual(roleSize.clientWidth);
+      expect(titleBox).not.toBeNull();
+      expect(organizationBox).not.toBeNull();
+      expect(roleBox).not.toBeNull();
+      expect(periodBox).not.toBeNull();
+      expect(contentBox).not.toBeNull();
+      expect(roleBox!.x).toBeGreaterThanOrEqual(organizationBox!.x + organizationBox!.width - 1);
+      expect(periodBox!.y).toBeGreaterThanOrEqual(Math.max(
+        organizationBox!.y + organizationBox!.height,
+        roleBox!.y + roleBox!.height,
+      ) - 1);
+      expect(contentBox!.y).toBeGreaterThanOrEqual(titleBox!.y + titleBox!.height - 1);
     }
   });
 }
@@ -432,6 +475,26 @@ test("detail header owns the only source link and the close affordance uses a po
   await expect(dialog.getByRole("link", { name: /查看源码/ })).toHaveCount(1);
   await expect(dialog.locator(".case-detail").getByRole("link", { name: /查看源码/ })).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "关闭秋招网申助手详情" })).toHaveCSS("cursor", "pointer");
+});
+
+test("keyboard focus visibly identifies both detail header actions", async ({ page }) => {
+  await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
+  const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
+  const sourceLink = dialog.getByRole("link", { name: /查看源码/ });
+  const closeButton = dialog.getByRole("button", { name: "关闭秋招网申助手详情" });
+
+  await expect(closeButton).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(sourceLink).toBeFocused();
+  await expect(sourceLink).toHaveCSS("outline-style", "solid");
+  await expect(sourceLink).toHaveCSS("outline-width", "3px");
+  await expectRenderedFocusIndicator(sourceLink, "detail source link keyboard focus");
+
+  await page.keyboard.press("Tab");
+  await expect(closeButton).toBeFocused();
+  await expect(closeButton).toHaveCSS("outline-style", "solid");
+  await expect(closeButton).toHaveCSS("outline-width", "3px");
+  await expectRenderedFocusIndicator(closeButton, "detail close button keyboard focus");
 });
 
 test("detail background and goal are ordered standalone full-width sections without core problems", async ({ page }) => {

@@ -182,10 +182,11 @@ button:focus-visible {
 .experience-period { justify-self: end; font-size: 0.8125rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .experience-highlight { margin: 0.25rem 0 0 5.25rem; color: var(--color-foreground); line-height: 1.45; }
 @media (min-width: 768px) and (max-width: 900px) {
-  .experience-title-line { grid-template-columns: 3.5rem minmax(0, 1fr) minmax(0, 1fr) auto; gap: 0.5rem; }
-  .company-logo-slot { width: 3.5rem; }
+  .experience-title-line { grid-template-columns: 3.5rem minmax(0, 1fr) max-content; gap: 0.25rem 0.5rem; }
+  .company-logo-slot { grid-row: 1 / span 2; width: 3.5rem; }
   .experience-organization,
-  .experience-role { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .experience-role { min-width: 0; white-space: nowrap; }
+  .experience-period { grid-column: 2 / -1; }
   .experience-highlight { margin-left: 4rem; }
 }
 

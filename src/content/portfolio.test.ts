@@ -127,6 +127,7 @@ describe("portfolio content", () => {
       width: 240,
       height: 64,
     });
+    expect(experiences.find(({ organization }) => organization === "美团")?.logo.alt).toBe("美团 Logo");
     for (const experience of experiences) {
       expect(experience.logo.src.startsWith("/companies/")).toBe(true);
       expectAssetDimensions(experience.logo.src, experience.logo.width, experience.logo.height);

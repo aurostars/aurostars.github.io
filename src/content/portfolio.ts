@@ -181,7 +181,7 @@ export const experiences: ExperienceItem[] = [
     organization: "美团",
     role: "产品运营",
     highlight: "供应链质量管理",
-    logo: { src: "/companies/meituan.svg", alt: "美团快驴 Logo", width: 813, height: 186 },
+    logo: { src: "/companies/meituan.svg", alt: "美团 Logo", width: 813, height: 186 },
   },
   {
     period: "2025.06 - 2025.09",
