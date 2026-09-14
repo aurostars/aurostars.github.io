@@ -93,27 +93,53 @@ describe("home page", () => {
     expect(screen.queryByRole("img", { name: /头像/ })).not.toBeInTheDocument();
   });
 
-  it("renders schools, simplified majors, degrees, and semantic education dates", () => {
+  it("renders branded education rows with distinct metadata and semantic dates", () => {
     render(<Home />);
     const history = screen.getByRole("region", { name: "教育与实习经历" });
-    expect(within(history).getByRole("heading", { level: 2, name: "教育经历" })).toBeInTheDocument();
     const educationRows = within(history).getAllByTestId("education-row");
+
     expect(educationRows).toHaveLength(2);
-    expect(educationRows[0]).toHaveTextContent("北京师范大学经济学硕士2024 - 2027");
-    expect(educationRows[0].querySelector("time")).toHaveTextContent("2024 - 2027");
-    expect(educationRows[1]).toHaveTextContent("中国人民大学经济学学士2020 - 2024");
-    expect(educationRows[1].querySelector("time")).toHaveTextContent("2020 - 2024");
-    expect(within(history).queryByText(/理论经济学|应用经济学/)).not.toBeInTheDocument();
-    expect(history.querySelector(".profile-history-motion")).toBeInTheDocument();
+    expect(within(educationRows[0]).getByRole("img", { name: "北京师范大学校徽" })).toBeInTheDocument();
+    expect(within(educationRows[1]).getByRole("img", { name: "中国人民大学校徽" })).toBeInTheDocument();
+
+    const expectedEducation = [
+      ["北京师范大学", "经济与工商管理学院", "经济学", "硕士", "2024 - 2027"],
+      ["中国人民大学", "劳动人事学院", "经济学", "学士", "2020 - 2024"],
+    ];
+    educationRows.forEach((row, index) => {
+      const [school, faculty, major, degree, period] = expectedEducation[index];
+      expect(row).toHaveClass("education-entry");
+      expect(row.querySelector(".school-logo-slot")).toBeInTheDocument();
+      expect(row.querySelector(".education-copy strong")).toHaveTextContent(school);
+      expect(row.querySelectorAll(".education-meta span")).toHaveLength(3);
+      expect(row.querySelectorAll(".education-meta span")[0]).toHaveTextContent(faculty);
+      expect(row.querySelectorAll(".education-meta span")[1]).toHaveTextContent(major);
+      expect(row.querySelectorAll(".education-meta span")[2]).toHaveTextContent(degree);
+      expect(row.querySelector("time")).toHaveTextContent(period);
+    });
+  });
+
+  it("groups each compact experience title line in logo, organization, role, period order", () => {
+    render(<Home />);
+    const history = screen.getByRole("region", { name: "教育与实习经历" });
     const experienceRows = within(history).getAllByTestId("experience-row");
+
     expect(experienceRows).toHaveLength(6);
-    expect(within(experienceRows[0]).getByText("2026.07 - 至今")).toBeInTheDocument();
-    expect(within(experienceRows[0]).getByText("字节跳动")).toBeInTheDocument();
-    expect(within(experienceRows[0]).getByText("AI 产品经理")).toBeInTheDocument();
-    expect(within(experienceRows[0]).getByText("企业 Agent 和团队数字员工的搭建与迭代")).toBeInTheDocument();
-    for (const item of experiences) {
-      expect(within(history).getByRole("img", { name: item.logo.alt })).toBeInTheDocument();
-    }
+    experienceRows.forEach((row, index) => {
+      const item = experiences[index];
+      const titleLine = within(row).getByTestId("experience-title-line");
+      expect(Array.from(titleLine.children).map((child) => child.className)).toEqual([
+        "company-logo-slot",
+        "experience-organization",
+        "experience-role",
+        "experience-period",
+      ]);
+      expect(within(titleLine).getByRole("img", { name: item.logo.alt })).toBeInTheDocument();
+      expect(titleLine.children[1]).toHaveTextContent(item.organization);
+      expect(titleLine.children[2]).toHaveTextContent(item.role);
+      expect(titleLine.children[3]).toHaveTextContent(item.period);
+      expect(row.querySelector(".experience-highlight")).toHaveTextContent(item.highlight);
+    });
   });
 
   it("describes the project grid with one shared instruction instead of per-card detail labels", () => {

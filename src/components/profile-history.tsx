@@ -1,5 +1,6 @@
 import { CompanyLogo } from "@/components/company-logo";
 import { Reveal } from "@/components/motion/reveal";
+import { SchoolLogo } from "@/components/school-logo";
 import type { EducationItem, ExperienceItem } from "@/content/portfolio";
 
 export interface ProfileHistoryProps {
@@ -20,10 +21,19 @@ export function ProfileHistory({ education, experiences }: ProfileHistoryProps) 
           <h2 id="education-title">教育经历</h2>
           <ul className="education-list">
             {education.map((item) => (
-              <li data-testid="education-row" key={`${item.school}-${item.degree}`}>
-                <strong>{item.school}</strong>
-                <span>{item.major}{item.degree}</span>
-                <time>{item.period}</time>
+              <li className="education-entry" data-testid="education-row" key={`${item.school}-${item.degree}`}>
+                <div className="school-logo-slot">
+                  <SchoolLogo logo={item.schoolLogo} />
+                </div>
+                <div className="education-copy">
+                  <strong>{item.school}</strong>
+                  <div className="education-meta">
+                    <span>{item.faculty}</span>
+                    <span>{item.major}</span>
+                    <span>{item.degree}</span>
+                  </div>
+                  <time>{item.period}</time>
+                </div>
               </li>
             ))}
           </ul>
@@ -33,17 +43,15 @@ export function ProfileHistory({ education, experiences }: ProfileHistoryProps) 
           <ol className="experience-list">
             {experiences.map((item) => (
               <li data-testid="experience-row" key={`${item.organization}-${item.period}`}>
-                <div className="company-logo-slot">
-                  <CompanyLogo logo={item.logo} />
-                </div>
-                <div className="experience-content">
-                  <div className="experience-heading">
-                    <strong>{item.organization}</strong>
-                    <time>{item.period}</time>
+                <div className="experience-title-line" data-testid="experience-title-line">
+                  <div className="company-logo-slot">
+                    <CompanyLogo logo={item.logo} />
                   </div>
-                  <p className="experience-role">{item.role}</p>
-                  <p className="experience-highlight">{item.highlight}</p>
+                  <strong className="experience-organization">{item.organization}</strong>
+                  <span className="experience-role">{item.role}</span>
+                  <time className="experience-period">{item.period}</time>
                 </div>
+                <p className="experience-highlight">{item.highlight}</p>
               </li>
             ))}
           </ol>

@@ -154,6 +154,40 @@ button:focus-visible {
   .education-list li { grid-template-columns: 1fr; gap: 0.35rem; }
 }
 
+/* Compact branded profile history */
+.identity-bar { padding-block: clamp(1rem, 2vw, 1.5rem) clamp(0.625rem, 1.25vw, 1rem); }
+.identity-bar-motion { gap: 1.25rem; padding: clamp(0.875rem, 1.8vw, 1.25rem); }
+.profile-history { padding-block: clamp(0.625rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.5rem); }
+.profile-history-motion {
+  grid-template-columns: minmax(0, 36fr) minmax(0, 64fr);
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+.profile-history h2 { margin-bottom: 0.5rem; }
+.education-entry { display: grid; grid-template-columns: 3rem minmax(0, 1fr); gap: 0.75rem; align-items: center; padding-block: 0.625rem; border-bottom: 1px solid var(--color-border); }
+.school-logo-slot { display: grid; width: 3rem; aspect-ratio: 1; place-items: center; }
+.school-logo { width: 100%; height: 100%; object-fit: contain; }
+.education-copy { display: grid; min-width: 0; gap: 0.15rem; }
+.education-meta { display: flex; flex-wrap: wrap; gap: 0.2rem 0.75rem; color: var(--color-foreground); }
+.education-meta span { overflow-wrap: anywhere; }
+.education-copy time { font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.experience-list li { position: relative; display: block; padding: 0.625rem 0 0.625rem 1rem; color: var(--color-foreground); }
+.experience-list li::before { position: absolute; top: 1rem; bottom: -1rem; left: 0.2rem; width: 1px; background: var(--color-border); content: ""; }
+.experience-list li::after { position: absolute; top: 1rem; left: 0; width: 0.45rem; aspect-ratio: 1; border-radius: 50%; background: var(--color-foreground); content: ""; }
+.experience-list li:last-child::before { display: none; }
+.experience-title-line { display: grid; grid-template-columns: 4.5rem minmax(max-content, 1fr) minmax(0, 1fr) auto; gap: 0.75rem; align-items: center; min-width: 0; }
+.company-logo-slot { width: 4.5rem; height: 2rem; }
+.experience-organization, .experience-role, .experience-highlight { overflow-wrap: anywhere; }
+.experience-role { margin: 0; font-weight: 650; }
+.experience-period { justify-self: end; font-size: 0.8125rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.experience-highlight { margin: 0.25rem 0 0 5.25rem; color: var(--color-foreground); line-height: 1.45; }
+@media (max-width: 767px) {
+  .profile-history-motion { grid-template-columns: 1fr; }
+  .education-entry { grid-template-columns: 3rem minmax(0, 1fr); gap: 0.75rem; }
+  .experience-title-line { grid-template-columns: 4.5rem minmax(0, 1fr) auto; gap: 0.5rem 0.75rem; }
+  .experience-role { grid-column: 2 / -1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     scroll-behavior: auto;
