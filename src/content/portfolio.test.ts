@@ -2,7 +2,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import * as portfolio from "./portfolio";
-import { contact, experiences, portfolioCases } from "./portfolio";
+import { contact, education, experiences, portfolioCases } from "./portfolio";
 
 const expectedSlugs = [
   "job-application-helper",
@@ -18,9 +18,6 @@ const expectedRepositoryUrls = {
   "meeting-minutes": "https://github.com/aurostars/meeting-minutes-extractor",
 } as const;
 
-const expectedResumeBuilderProvenance =
-  "基于 https://github.com/JOYCEQL/magic-resume 二次开发；当前仓库 README 明确列出的个人修改范围：扩展 API 提供商、增加主题色预设与模板、增加简历快速生成、JD 定制优化、STAR 法则改写、中英简历互译和多格式导出。";
-
 const expectedFeatureBounds = {
   "job-application-helper": { count: 10, first: "求职资料集中管理。", last: "版本化 JSON 备份与 WebDAV 双向同步。" },
   "resume-builder": { count: 11, first: "可视化简历创建、区块编辑与拖拽排序。", last: "本地简历数据与 API Key 管理。" },
@@ -31,9 +28,9 @@ const expectedFeatureBounds = {
 const expectedExperienceFacts = [
   { period: "2026.07 - 至今", organization: "字节跳动", role: "AI 产品经理", highlight: "企业 Agent 和团队数字员工的搭建与迭代" },
   { period: "2026.03 - 2026.07", organization: "科大讯飞", role: "AI 产品经理", highlight: "多模态心脏超声智能报告系统" },
-  { period: "2025.10 - 2026.01", organization: "美团快驴", role: "产品运营", highlight: "AI 工具驱动业务流程提效" },
-  { period: "2025.06 - 2025.09", organization: "国务院发展研究中心大数据研究院", role: "产品经理", highlight: "研究与数据产品实践" },
-  { period: "2023.10 - 2024.01", organization: "BOSS直聘", role: "行业与产品研究", highlight: "招聘市场与行业研究" },
+  { period: "2025.10 - 2026.01", organization: "美团", role: "产品运营", highlight: "供应链质量管理" },
+  { period: "2025.06 - 2025.09", organization: "国务院发展研究中心大数据研究院", role: "产品经理", highlight: "大数据平台产品构建" },
+  { period: "2023.10 - 2024.01", organization: "BOSS直聘", role: "行业与产品研究", highlight: "行业研究与产品优化" },
   { period: "2023.03 - 2023.06", organization: "太平洋证券研究所", role: "行业研究", highlight: "行业数据分析与研究支持" },
 ];
 
@@ -118,33 +115,73 @@ describe("portfolio content", () => {
     }
   });
 
-  it("records the Resume Builder upstream and verified personal modification scope", () => {
-    const resumeBuilder = portfolioCases.find((item) => item.slug === "resume-builder");
-
-    expect(resumeBuilder?.provenance).toBe(expectedResumeBuilderProvenance);
-  });
-
-  it("adds ByteDance first and keeps all six experiences with local logo metadata", () => {
-    expect(
-      experiences.map(({ period, organization, role, highlight }) => ({
-        period,
-        organization,
-        role,
-        highlight,
-      })),
-    ).toEqual(expectedExperienceFacts);
+  it("uses the approved experience facts and local logo metadata", () => {
+    expect(experiences.map(({ period, organization, role, highlight }) => ({ period, organization, role, highlight }))).toEqual(
+      expectedExperienceFacts,
+    );
     expect(experiences[0].logo).toEqual({
       src: "/companies/bytedance.svg",
       alt: "字节跳动 Logo",
       width: 240,
       height: 64,
     });
-    expect(experiences.every((item) => item.highlight.length <= 48)).toBe(true);
     for (const experience of experiences) {
       expect(experience.logo.src.startsWith("/companies/")).toBe(true);
-      expect(experience.logo.alt).toContain("Logo");
       expectAssetDimensions(experience.logo.src, experience.logo.width, experience.logo.height);
     }
+  });
+
+  it("uses the approved education fields and local school emblems", () => {
+    expect(education).toEqual([
+      {
+        school: "北京师范大学",
+        schoolLogo: { src: "/schools/beijing-normal-university.svg", alt: "北京师范大学校徽", width: 300, height: 300 },
+        faculty: "经济与工商管理学院",
+        major: "经济学",
+        degree: "硕士",
+        period: "2024 - 2027",
+      },
+      {
+        school: "中国人民大学",
+        schoolLogo: { src: "/schools/renmin-university-of-china.svg", alt: "中国人民大学校徽", width: 300, height: 300 },
+        faculty: "劳动人事学院",
+        major: "经济学",
+        degree: "学士",
+        period: "2020 - 2024",
+      },
+    ]);
+    for (const item of education) {
+      expect(item.schoolLogo.src.startsWith("/schools/")).toBe(true);
+      expectAssetDimensions(item.schoolLogo.src, item.schoolLogo.width, item.schoolLogo.height);
+    }
+  });
+
+  it("uses the final project media selections", () => {
+    expect(portfolioCases.map(({ slug, media }) => ({ slug, sources: media.map(({ src }) => src) }))).toEqual([
+      {
+        slug: "job-application-helper",
+        sources: [
+          "/projects/job-application-helper/extension-popup.png",
+          "/projects/job-application-helper/profile-manager.png",
+        ],
+      },
+      { slug: "interview-review", sources: ["/projects/interview-review/analysis.png"] },
+      { slug: "resume-builder", sources: ["/projects/resume-builder/workspace.png"] },
+      { slug: "meeting-minutes", sources: ["/projects/meeting-minutes/input.png"] },
+    ]);
+    expect(portfolioCases.map(({ media }) => media.length)).toEqual([2, 1, 1, 1]);
+  });
+
+  it("removes user problems and omits provenance only for Resume Builder", () => {
+    for (const item of portfolioCases) {
+      expect(item).not.toHaveProperty("userProblems");
+    }
+    expect(portfolioCases.find(({ slug }) => slug === "resume-builder")).not.toHaveProperty("provenance");
+    expect(portfolioCases.filter(({ provenance }) => provenance !== undefined).map(({ provenance }) => provenance)).toEqual([
+      "独立开发项目，页面只展示仓库和真实运行结果可验证的功能。",
+      "独立开发项目，效果描述不包含未经真实测试验证的准确率或提升比例。",
+      "独立开发项目，页面只描述仓库中可验证的流程与功能。",
+    ]);
   });
 
   it("constructs the approved visible email and limits contact to email and GitHub", () => {
