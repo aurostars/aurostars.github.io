@@ -156,6 +156,26 @@ describe("portfolio content", () => {
     }
   });
 
+  it("keeps both school SVGs self-contained, script-free, square, and on-brand", () => {
+    const emblems = [
+      { src: "/schools/beijing-normal-university.svg", brandColor: "#004ea2" },
+      { src: "/schools/renmin-university-of-china.svg", brandColor: "#ad0b2a" },
+    ];
+
+    for (const emblem of emblems) {
+      const svg = readFileSync(join(process.cwd(), "public", emblem.src.replace(/^\//, "")), "utf8");
+      expect(svg).not.toMatch(/<script\b/i);
+      expect(svg).not.toMatch(/<foreignObject\b/i);
+      expect(svg).not.toMatch(/(?:href|xlink:href)\s*=\s*["']https?:/i);
+      expect(svg).not.toMatch(/@font-face/i);
+      expect(svg.toLowerCase()).toContain(emblem.brandColor);
+
+      const viewBox = svg.match(/\bviewBox=["']\s*([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s+([\d.-]+)\s*["']/i);
+      expect(viewBox, `${emblem.src} should declare a viewBox`).not.toBeNull();
+      expect(Number(viewBox![3]), `${emblem.src} viewBox should be square`).toBe(Number(viewBox![4]));
+    }
+  });
+
   it("uses the final project media selections", () => {
     expect(portfolioCases.map(({ slug, media }) => ({ slug, sources: media.map(({ src }) => src) }))).toEqual([
       {

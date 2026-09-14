@@ -38,12 +38,12 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
       </div>
 
       <div className="case-detail-grid">
-        <section className="case-background">
-          <h4>背景</h4>
+        <section className="case-background" aria-labelledby={`${project.slug}-background`}>
+          <h4 id={`${project.slug}-background`}>背景</h4>
           <p>{project.background}</p>
         </section>
-        <section className="case-goal">
-          <h4>目标</h4>
+        <section className="case-goal" aria-labelledby={`${project.slug}-goal`}>
+          <h4 id={`${project.slug}-goal`}>目标</h4>
           <p>{project.goal}</p>
         </section>
       </div>

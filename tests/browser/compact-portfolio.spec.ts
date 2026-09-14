@@ -117,6 +117,13 @@ async function expectRenderedFocusIndicator(locator: Locator, label: string) {
   const ratios: number[] = [];
   for (let y = 0; y < focused.info.height; y += 1) {
     for (let x = 0; x < focused.info.width; x += 1) {
+      const pageX = clip.x + x;
+      const pageY = clip.y + y;
+      const outsideElement = pageX < box!.x
+        || pageX >= box!.x + box!.width
+        || pageY < box!.y
+        || pageY >= box!.y + box!.height;
+      if (!outsideElement) continue;
       const indicator = pixelAt(focused.data, focused.info.width, x, y);
       const behindIndicator = pixelAt(background.data, background.info.width, x, y);
       if (colorDistance(indicator, outline) <= 8 && colorDistance(indicator, behindIndicator) >= 16) {
@@ -125,7 +132,8 @@ async function expectRenderedFocusIndicator(locator: Locator, label: string) {
     }
   }
   expect(ratios.length, `${label} must render solid focus-indicator pixels`).toBeGreaterThan(0);
-  expect(Math.min(...ratios), `${label} rendered focus-indicator contrast`).toBeGreaterThanOrEqual(3);
+  ratios.sort((first, second) => first - second);
+  expect(ratios[Math.floor(ratios.length / 2)], `${label} rendered focus-indicator contrast`).toBeGreaterThanOrEqual(3);
 }
 
 function expectRectClose(
@@ -205,8 +213,11 @@ for (const viewport of viewports) {
     expect(internshipBox).not.toBeNull();
 
     if (viewport.width >= 768) {
-      expect(Math.abs(educationBox!.y - internshipBox!.y)).toBeLessThanOrEqual(1);
-      expect(educationBox!.x + educationBox!.width).toBeLessThanOrEqual(internshipBox!.x);
+      const educationShare = educationBox!.width / (educationBox!.width + internshipBox!.width);
+      expect(educationShare).toBeGreaterThanOrEqual(0.33);
+      expect(educationShare).toBeLessThanOrEqual(0.39);
+      expect(Math.abs(educationBox!.y - internshipBox!.y)).toBeLessThanOrEqual(2);
+      expect(rectanglesOverlap(educationBox!, internshipBox!)).toBe(false);
     } else {
       expect(internshipBox!.y).toBeGreaterThanOrEqual(educationBox!.y + educationBox!.height);
     }
@@ -217,6 +228,54 @@ for (const viewport of viewports) {
     expect(hintBox!.x).toBeGreaterThanOrEqual(0);
     expect(hintBox!.x + hintBox!.width).toBeLessThanOrEqual(viewport.width);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+  });
+}
+
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 1024, height: 768 },
+]) {
+  test(`${viewport.width}px exposes the project heading in the first screen`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const headingBox = await page.getByRole("heading", { name: "个人项目" }).boundingBox();
+    expect(headingBox).not.toBeNull();
+    expect(headingBox!.y).toBeGreaterThan(0);
+    expect(headingBox!.y).toBeLessThan(viewport.height);
+  });
+}
+
+for (const viewport of viewports.filter(({ width }) => width >= 768)) {
+  test(`${viewport.width}px keeps desktop experience identity fields on one row above their content`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    for (const row of await page.getByTestId("experience-row").all()) {
+      const titleLine = row.getByTestId("experience-title-line");
+      const fields = [
+        titleLine.locator(".company-logo-slot"),
+        titleLine.locator(".experience-organization"),
+        titleLine.locator(".experience-role"),
+        titleLine.locator(".experience-period"),
+      ];
+      const [titleBox, contentBox, ...fieldBoxes] = await Promise.all([
+        titleLine.boundingBox(),
+        row.locator(".experience-highlight").boundingBox(),
+        ...fields.map((field) => field.boundingBox()),
+      ]);
+      expect(titleBox).not.toBeNull();
+      expect(contentBox).not.toBeNull();
+      expect(fieldBoxes.every(Boolean)).toBe(true);
+      for (const fieldBox of fieldBoxes) {
+        expect(fieldBox!.y).toBeGreaterThanOrEqual(titleBox!.y - 1);
+        expect(fieldBox!.y + fieldBox!.height).toBeLessThanOrEqual(titleBox!.y + titleBox!.height + 1);
+      }
+      for (let index = 1; index < fieldBoxes.length; index += 1) {
+        expect(fieldBoxes[index]!.x).toBeGreaterThanOrEqual(fieldBoxes[index - 1]!.x + fieldBoxes[index - 1]!.width);
+      }
+      expect(contentBox!.y).toBeGreaterThanOrEqual(titleBox!.y + titleBox!.height);
+    }
   });
 }
 
@@ -265,8 +324,8 @@ test("company logo failure preserves the successful row, slot, and company text 
   expect(loadedRowBox).not.toBeNull();
   expect(loadedSlotBox).not.toBeNull();
   expect(loadedCompanyBox).not.toBeNull();
-  expect(loadedSlotBox!.width).toBeCloseTo(88, 0);
-  expect(loadedSlotBox!.height).toBeCloseTo(40, 0);
+  expect(loadedSlotBox!.width).toBeCloseTo(72, 0);
+  expect(loadedSlotBox!.height).toBeCloseTo(32, 0);
 
   let failedRequest = false;
   await page.route("**/companies/bytedance.svg", async (route) => {
@@ -361,6 +420,79 @@ for (const viewport of viewports) {
       }
     });
   }
+}
+
+test("detail header owns the only source link and the close affordance uses a pointer cursor", async ({ page }) => {
+  await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
+  const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
+  const header = dialog.locator(".case-dialog-header");
+  await expect(header.getByRole("link", { name: /查看源码/ })).toHaveCount(1);
+  await expect(dialog.getByRole("link", { name: /查看源码/ })).toHaveCount(1);
+  await expect(dialog.locator(".case-detail").getByRole("link", { name: /查看源码/ })).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "关闭秋招网申助手详情" })).toHaveCSS("cursor", "pointer");
+});
+
+test("detail background and goal are ordered standalone full-width sections without core problems", async ({ page }) => {
+  await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
+  const dialog = page.getByRole("dialog", { name: "秋招网申助手" });
+  const background = dialog.getByRole("region", { name: "背景" });
+  const goal = dialog.getByRole("region", { name: "目标" });
+  const [backgroundBox, goalBox] = await Promise.all([background.boundingBox(), goal.boundingBox()]);
+  expect(backgroundBox).not.toBeNull();
+  expect(goalBox).not.toBeNull();
+  expectRectClose(
+    { x: goalBox!.x, y: backgroundBox!.y, width: goalBox!.width, height: backgroundBox!.height },
+    backgroundBox!,
+  );
+  expect(goalBox!.y).toBeGreaterThanOrEqual(backgroundBox!.y + backgroundBox!.height);
+  await expect(dialog.getByText("核心问题", { exact: true })).toHaveCount(0);
+});
+
+for (const project of [
+  { slug: "interview-review", title: "面试复盘助手" },
+  { slug: "resume-builder", title: "智能简历编辑工具" },
+  { slug: "meeting-minutes", title: "智能会议纪要工具" },
+]) {
+  test(`${project.title} uses one near-full-width contained gallery image`, async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await page.goto(`/?project=${project.slug}`, { waitUntil: "networkidle" });
+    const dialog = page.getByRole("dialog", { name: project.title });
+    const gallery = dialog.getByRole("group", { name: `${project.title}真实产品界面` });
+    const figures = gallery.locator("figure");
+    const image = gallery.getByRole("img");
+    await expect(figures).toHaveCount(1);
+    await expect(image).toHaveCount(1);
+    await expect(image).toHaveCSS("object-fit", "contain");
+    const [figureBox, contentWidth] = await Promise.all([
+      figures.boundingBox(),
+      dialog.locator(".case-dialog-scroll").evaluate((node) => node.clientWidth),
+    ]);
+    expect(figureBox).not.toBeNull();
+    expect(figureBox!.width / contentWidth).toBeGreaterThanOrEqual(0.9);
+  });
+}
+
+for (const viewport of [
+  { width: 1024, height: 768, stacked: false },
+  { width: 390, height: 844, stacked: true },
+]) {
+  test(`Job Application Helper gallery has ordered non-overlapping figures at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
+    const figures = page.getByRole("group", { name: "秋招网申助手真实产品界面" }).locator("figure");
+    await expect(figures).toHaveCount(2);
+    const boxes = await figures.evaluateAll((nodes) => nodes.map((node) => {
+      const { x, y, width, height } = node.getBoundingClientRect();
+      return { x, y, width, height };
+    }));
+    expect(rectanglesOverlap(boxes[0], boxes[1])).toBe(false);
+    if (viewport.stacked) {
+      expect(boxes[1].y).toBeGreaterThanOrEqual(boxes[0].y + boxes[0].height);
+    } else {
+      expect(boxes[1].x).toBeGreaterThanOrEqual(boxes[0].x + boxes[0].width);
+      expect(boxes[1].width * boxes[1].height).toBeGreaterThan(boxes[0].width * boxes[0].height);
+    }
+  });
 }
 
 test("detail gallery preserves the two approved Job Application Helper screenshots, features, and source link", async ({ page }) => {

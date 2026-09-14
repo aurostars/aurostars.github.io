@@ -181,6 +181,14 @@ button:focus-visible {
 .experience-role { margin: 0; font-weight: 650; }
 .experience-period { justify-self: end; font-size: 0.8125rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .experience-highlight { margin: 0.25rem 0 0 5.25rem; color: var(--color-foreground); line-height: 1.45; }
+@media (min-width: 768px) and (max-width: 900px) {
+  .experience-title-line { grid-template-columns: 3.5rem minmax(0, 1fr) minmax(0, 1fr) auto; gap: 0.5rem; }
+  .company-logo-slot { width: 3.5rem; }
+  .experience-organization,
+  .experience-role { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .experience-highlight { margin-left: 4rem; }
+}
+
 @media (max-width: 767px) {
   .profile-history-motion { grid-template-columns: 1fr; }
   .education-entry { grid-template-columns: 3rem minmax(0, 1fr); gap: 0.75rem; }
@@ -523,6 +531,10 @@ button:focus-visible {
 .case-gallery[data-gallery-layout="job-helper-duo"] .project-image-frame,
 .case-gallery[data-gallery-layout="job-helper-duo"] img {
   height: 100%;
+}
+
+.case-gallery[data-gallery-layout="job-helper-duo"] .project-image-frame[data-image-status="failed"] {
+  height: auto;
 }
 
 .case-detail-grid {
