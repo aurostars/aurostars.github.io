@@ -99,10 +99,10 @@ describe("home page", () => {
     expect(within(history).getByRole("heading", { level: 2, name: "教育经历" })).toBeInTheDocument();
     const educationRows = within(history).getAllByTestId("education-row");
     expect(educationRows).toHaveLength(2);
-    expect(educationRows[0]).toHaveTextContent("北京师范大学经济学硕士2024-2027");
-    expect(educationRows[0].querySelector("time")).toHaveTextContent("2024-2027");
-    expect(educationRows[1]).toHaveTextContent("中国人民大学经济学学士2020-2024");
-    expect(educationRows[1].querySelector("time")).toHaveTextContent("2020-2024");
+    expect(educationRows[0]).toHaveTextContent("北京师范大学经济学硕士2024 - 2027");
+    expect(educationRows[0].querySelector("time")).toHaveTextContent("2024 - 2027");
+    expect(educationRows[1]).toHaveTextContent("中国人民大学经济学学士2020 - 2024");
+    expect(educationRows[1].querySelector("time")).toHaveTextContent("2020 - 2024");
     expect(within(history).queryByText(/理论经济学|应用经济学/)).not.toBeInTheDocument();
     expect(history.querySelector(".profile-history-motion")).toBeInTheDocument();
     const experienceRows = within(history).getAllByTestId("experience-row");

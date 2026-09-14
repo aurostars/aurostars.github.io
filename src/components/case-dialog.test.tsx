@@ -45,6 +45,12 @@ describe("CaseDialog", () => {
     expect(dialog).toHaveAttribute("aria-labelledby", "case-dialog-title");
   });
 
+  it("does not render the removed core-problems section", () => {
+    renderDialog({ project: portfolioCases[0] });
+
+    expect(screen.queryByRole("heading", { name: "核心问题" })).not.toBeInTheDocument();
+  });
+
   it("locks body scroll while open and restores prior inline styles after exit", async () => {
     document.body.style.overflow = "visible";
     document.body.style.paddingRight = "7px";

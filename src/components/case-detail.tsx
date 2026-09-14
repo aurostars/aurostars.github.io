@@ -42,14 +42,6 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
           <h4>目标</h4>
           <p>{project.goal}</p>
         </section>
-        <section>
-          <h4>核心问题</h4>
-          <ul>
-            {project.userProblems.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </section>
       </div>
 
       <section className="case-workflow" aria-labelledby={`${project.slug}-workflow`}>
