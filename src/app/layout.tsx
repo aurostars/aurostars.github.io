@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,14 +23,14 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col mesh-bg overflow-x-hidden">
         <header className="sticky top-0 z-50 glass-strong">
           <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-            <a className="hero-gradient-text text-lg font-bold tracking-tight" href="/">
+            <Link className="hero-gradient-text text-lg font-bold tracking-tight" href="/">
               董星
-            </a>
+            </Link>
             <ul className="flex gap-1">
               <li>
-                <a className="rounded-full px-4 py-1.5 text-sm font-medium bg-blue-500/20 text-blue-400" href="/">
+                <Link className="rounded-full px-4 py-1.5 text-sm font-medium bg-blue-500/20 text-blue-400" href="/">
                   首页
-                </a>
+                </Link>
               </li>
               <li>
                 <a className="rounded-full px-4 py-1.5 text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300" href="#projects">
