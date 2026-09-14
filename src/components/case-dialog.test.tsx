@@ -1,4 +1,4 @@
-import { createRef } from "react";
+import React, { createRef } from "react";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -45,10 +45,66 @@ describe("CaseDialog", () => {
     expect(dialog).toHaveAttribute("aria-labelledby", "case-dialog-title");
   });
 
+  it("renders one source link before close in the header and none in scroll content", () => {
+    renderDialog({ project: portfolioCases[0] });
+    const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
+    const actions = dialog.querySelector(".case-dialog-actions");
+    const sourceLink = within(dialog).getByRole("link", { name: "查看源码（新窗口）" });
+    const closeButton = within(dialog).getByRole("button", { name: "关闭秋招网申助手详情" });
+
+    expect(actions).not.toBeNull();
+    expect(Array.from(actions?.children ?? [])).toEqual([sourceLink, closeButton]);
+    expect(sourceLink).toHaveClass("case-source-link");
+    expect(closeButton).toHaveClass("case-dialog-close");
+    expect(sourceLink).toHaveAttribute("href", portfolioCases[0].repositoryUrl);
+    expect(sourceLink).toHaveAttribute("target", "_blank");
+    expect(sourceLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(dialog.querySelectorAll(".case-source-link")).toHaveLength(1);
+    expect(dialog.querySelector(".case-dialog-scroll .case-detail-links")).not.toBeInTheDocument();
+  });
+
+  it("renders background and goal as distinct full-row detail sections before workflow", () => {
+    renderDialog({ project: portfolioCases[0] });
+    const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
+    const grid = dialog.querySelector(".case-detail-grid");
+    const background = dialog.querySelector(".case-background");
+    const goal = dialog.querySelector(".case-goal");
+    const workflow = dialog.querySelector(".case-workflow");
+
+    expect(Array.from(grid?.children ?? [])).toEqual([background, goal]);
+    expect(background).toHaveTextContent(portfolioCases[0].background);
+    expect(goal).toHaveTextContent(portfolioCases[0].goal);
+    expect(goal).not.toBeNull();
+    expect(workflow).not.toBeNull();
+    if (!goal || !workflow) throw new Error("Expected goal and workflow sections");
+    expect(goal.compareDocumentPosition(workflow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("does not render the removed core-problems section", () => {
     renderDialog({ project: portfolioCases[0] });
 
     expect(screen.queryByRole("heading", { name: "核心问题" })).not.toBeInTheDocument();
+  });
+
+  it.each(portfolioCases)("renders provenance only when defined for $title", (project) => {
+    renderDialog({ project });
+    const provenance = screen.getByRole("dialog", { name: project.title }).querySelector(".case-provenance");
+
+    if (project.provenance) {
+      expect(provenance).toHaveTextContent(project.provenance);
+    } else {
+      expect(provenance).not.toBeInTheDocument();
+    }
+  });
+
+  it.each(portfolioCases)("uses the approved gallery layout and media count for $title", (project) => {
+    renderDialog({ project });
+    const gallery = within(screen.getByRole("dialog", { name: project.title }))
+      .getByRole("group", { name: `${project.title}真实产品界面` });
+    const isJobHelper = project.slug === "job-application-helper";
+
+    expect(gallery).toHaveAttribute("data-gallery-layout", isJobHelper ? "job-helper-duo" : "single");
+    expect(gallery.querySelectorAll("figure")).toHaveLength(isJobHelper ? 2 : 1);
   });
 
   it("locks body scroll while open and restores prior inline styles after exit", async () => {

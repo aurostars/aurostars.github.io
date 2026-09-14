@@ -423,7 +423,9 @@ button:focus-visible {
 }
 
 .case-dialog-heading {
+  flex: 1 1 auto;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .case-dialog-heading p {
@@ -433,32 +435,51 @@ button:focus-visible {
   line-height: 1.5;
 }
 
-.case-dialog-header button {
-  min-width: 2.75rem;
+.case-dialog-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.case-source-link,
+.case-dialog-close {
+  display: inline-flex;
   min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.625rem;
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font: inherit;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.case-dialog-close {
+  min-width: 2.75rem;
+  cursor: pointer;
+}
+
+.case-source-link:hover,
+.case-dialog-close:hover {
+  border-color: var(--color-accent);
+  background: var(--portfolio-accent-soft);
+}
+
+.case-source-link:active,
+.case-dialog-close:active {
+  transform: translateY(1px);
 }
 
 .case-dialog-scroll {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-}
-
-.case-detail-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.case-detail-links a {
-  min-height: 2.75rem;
-  color: var(--color-foreground);
-  font-weight: 700;
-  text-decoration: underline 2px var(--color-accent);
-  text-underline-offset: 0.35rem;
 }
 
 .case-detail {
@@ -483,38 +504,30 @@ button:focus-visible {
 
 .case-gallery {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 1rem;
 }
 
-.case-gallery[data-gallery-layout="featured-four"] {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(9rem, 1fr));
+.case-gallery[data-gallery-layout="single"] figure,
+.case-gallery[data-gallery-layout="single"] .project-image-frame {
+  width: 100%;
+}
+
+.case-gallery[data-gallery-layout="job-helper-duo"] {
+  grid-template-columns: minmax(10rem, 0.42fr) minmax(0, 1fr);
   align-items: stretch;
 }
 
-.case-gallery[data-gallery-layout="featured-four"] figure {
+.case-gallery[data-gallery-layout="job-helper-duo"] figure,
+.case-gallery[data-gallery-layout="job-helper-duo"] .project-image-frame,
+.case-gallery[data-gallery-layout="job-helper-duo"] img {
   height: 100%;
-}
-
-.case-gallery[data-gallery-layout="featured-four"] figure:first-child {
-  grid-column: span 2;
-  grid-row: span 2;
-}
-
-.case-gallery[data-gallery-layout="featured-four"] figure:nth-child(2) {
-  grid-column: span 2;
-}
-
-.case-gallery[data-gallery-layout="featured-four"] img {
-  height: 100%;
-  object-fit: contain;
 }
 
 .case-detail-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
 }
 
@@ -624,6 +637,17 @@ button:focus-visible {
   .case-features ul {
     grid-template-columns: 1fr;
   }
+
+  .case-gallery[data-gallery-layout="job-helper-duo"] {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .case-gallery[data-gallery-layout="job-helper-duo"] figure,
+  .case-gallery[data-gallery-layout="job-helper-duo"] .project-image-frame,
+  .case-gallery[data-gallery-layout="job-helper-duo"] img {
+    height: auto;
+  }
 }
 
 @media (max-width: 679px) {
@@ -667,30 +691,9 @@ button:focus-visible {
   }
 
   .case-gallery,
-  .case-gallery[data-gallery-layout="featured-four"],
-  .case-detail-grid,
   .workflow,
   .case-detail-grid ul {
     grid-template-columns: 1fr;
-  }
-
-  .case-gallery[data-gallery-layout="featured-four"] {
-    grid-template-rows: none;
-  }
-
-  .case-gallery[data-gallery-layout="featured-four"] figure:first-child,
-  .case-gallery[data-gallery-layout="featured-four"] figure:nth-child(2) {
-    grid-column: auto;
-    grid-row: auto;
-  }
-
-  .case-gallery[data-gallery-layout="featured-four"] figure {
-    height: auto;
-  }
-
-  .case-gallery[data-gallery-layout="featured-four"] img {
-    height: auto;
-    object-fit: contain;
   }
 
   .workflow {

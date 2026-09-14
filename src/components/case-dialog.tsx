@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject, type SyntheticEvent } from "react";
+import React, { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject, type SyntheticEvent } from "react";
 import { CaseDetail } from "@/components/case-detail";
 import { entranceEase } from "@/components/motion/motion-config";
 import { usePrefersReducedMotion } from "@/components/motion/use-prefers-reduced-motion";
@@ -128,15 +128,27 @@ export function CaseDialog({ project, onClose, returnFocusTo, fallbackFocusRef }
                 <h2 id="case-dialog-title">{project.title}</h2>
                 <p>{project.summary}</p>
               </div>
-              <button
-                ref={closeButtonRef}
-                type="button"
-                aria-label={`关闭${project.title}详情`}
-                autoFocus
-                onClick={onClose}
-              >
-                关闭
-              </button>
+              <div className="case-dialog-actions">
+                <a
+                  className="case-source-link"
+                  href={project.repositoryUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="查看源码（新窗口）"
+                >
+                  查看源码<span className="sr-only">（新窗口）</span>
+                </a>
+                <button
+                  ref={closeButtonRef}
+                  className="case-dialog-close"
+                  type="button"
+                  aria-label={`关闭${project.title}详情`}
+                  autoFocus
+                  onClick={onClose}
+                >
+                  关闭
+                </button>
+              </div>
             </header>
             <div className="case-dialog-scroll">
               <CaseDetail project={project} />

@@ -1,3 +1,4 @@
+import React from "react";
 import fs from "node:fs";
 import path from "node:path";
 import { cleanup, render, screen, within } from "@testing-library/react";
@@ -232,15 +233,19 @@ describe("home page", () => {
     expect(dialog.queryByText("查看上游项目")).not.toBeInTheDocument();
   });
 
-  it("places the source link after the verified feature list", async () => {
+  it("keeps the source link in the header action group before close", async () => {
     const user = userEvent.setup();
     render(<Home />);
     await user.click(screen.getByRole("button", { name: "查看项目详情：秋招网申助手" }));
     const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
-    const features = within(dialog).getByRole("region", { name: "已实现功能" });
-    const sourceLink = within(dialog).getByRole("link", { name: /查看源码/ });
+    const header = dialog.querySelector(".case-dialog-header");
+    const actions = dialog.querySelector(".case-dialog-actions");
+    const sourceLink = within(dialog).getByRole("link", { name: "查看源码（新窗口）" });
+    const closeButton = within(dialog).getByRole("button", { name: "关闭秋招网申助手详情" });
 
-    expect(features.compareDocumentPosition(sourceLink) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(header).toContainElement(actions as HTMLElement);
+    expect(Array.from(actions?.children ?? [])).toEqual([sourceLink, closeButton]);
+    expect(dialog.querySelector(".case-dialog-scroll .case-source-link")).not.toBeInTheDocument();
   });
 
   it("shows only the two approved Job Application Helper screenshots", async () => {

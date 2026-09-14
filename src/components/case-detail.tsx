@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { ProjectImage } from "@/components/project-image";
 import type { ProjectCase } from "@/content/portfolio";
 
@@ -14,15 +15,18 @@ function imageSizes(project: ProjectCase, mediaIndex: number) {
 }
 
 export function CaseDetail({ project }: { project: ProjectCase }) {
+  const isJobHelper = project.slug === "job-application-helper";
+  const galleryMedia = project.media.slice(0, isJobHelper ? 2 : 1);
+
   return (
     <div className="case-detail">
       <div
         className="case-gallery"
-        data-gallery-layout={project.media.length === 4 ? "featured-four" : "standard"}
+        data-gallery-layout={isJobHelper ? "job-helper-duo" : "single"}
         role="group"
         aria-label={`${project.title}真实产品界面`}
       >
-        {project.media.map((media, mediaIndex) => (
+        {galleryMedia.map((media, mediaIndex) => (
           <figure key={media.src}>
             <ProjectImage
               media={media}
@@ -34,11 +38,11 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
       </div>
 
       <div className="case-detail-grid">
-        <section>
+        <section className="case-background">
           <h4>背景</h4>
           <p>{project.background}</p>
         </section>
-        <section>
+        <section className="case-goal">
           <h4>目标</h4>
           <p>{project.goal}</p>
         </section>
@@ -64,13 +68,7 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
         </ul>
       </section>
 
-      <p className="case-provenance">{project.provenance}</p>
-
-      <div className="case-detail-links" aria-label={`${project.title}项目链接`}>
-        <a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer">
-          查看源码<span className="sr-only">（新窗口）</span>
-        </a>
-      </div>
+      {project.provenance ? <p className="case-provenance">{project.provenance}</p> : null}
     </div>
   );
 }
