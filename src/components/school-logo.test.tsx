@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SchoolLogo } from "@/components/school-logo";
+import { ProfileHistory } from "@/components/profile-history";
+import { education } from "@/content/portfolio";
 
 const logo = {
   src: "/schools/example.svg",
@@ -9,7 +11,18 @@ const logo = {
   height: 240,
 };
 
-afterEach(cleanup);
+beforeEach(() => {
+  vi.stubGlobal("IntersectionObserver", class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  });
+});
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe("SchoolLogo", () => {
   it("renders the local emblem with intrinsic dimensions", () => {
@@ -22,16 +35,18 @@ describe("SchoolLogo", () => {
     expect(image).toHaveClass("school-logo");
   });
 
-  it("removes only the failed image", () => {
+  it("removes only a failed image from the real education row", () => {
     const { container } = render(
-      <div className="school-logo-slot">
-        <SchoolLogo logo={logo} />
-      </div>,
+      <ProfileHistory education={[education[0]]} experiences={[]} />,
     );
+    const row = screen.getByTestId("education-row");
+    const schoolName = education[0].school;
 
-    fireEvent.error(screen.getByRole("img", { name: logo.alt }));
+    fireEvent.error(screen.getByRole("img", { name: education[0].schoolLogo.alt }));
 
-    expect(screen.queryByRole("img", { name: logo.alt })).not.toBeInTheDocument();
-    expect(container.querySelector(".school-logo-slot")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: education[0].schoolLogo.alt })).not.toBeInTheDocument();
+    expect(row.querySelector(".school-logo-slot")).toBeInTheDocument();
+    expect(row).toHaveTextContent(schoolName);
+    expect(container.querySelector(".education-copy strong")).toHaveTextContent(schoolName);
   });
 });

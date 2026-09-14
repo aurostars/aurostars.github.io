@@ -142,6 +142,15 @@ describe("home page", () => {
     });
   });
 
+  it("keeps the mobile experience title in one compact four-column row", () => {
+    const css = fs.readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
+    const mobileHistory = css.match(/@media \(max-width: 767px\) \{[\s\S]*?\.experience-title-line[\s\S]*?\n\}/g)?.at(-1);
+
+    expect(mobileHistory).toContain("grid-template-columns: 3.5rem minmax(0, 1fr) minmax(0, 1fr) auto");
+    expect(mobileHistory).not.toContain("grid-column: 2 / -1");
+    expect(mobileHistory).toContain("text-overflow: ellipsis");
+  });
+
   it("describes the project grid with one shared instruction instead of per-card detail labels", () => {
     render(<Home />);
     const section = screen.getByRole("region", { name: "个人项目" });
