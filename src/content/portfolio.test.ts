@@ -156,9 +156,9 @@ describe("portfolio content", () => {
       expectedExperienceFacts,
     );
     expect(experiences[0].logo).toEqual({
-      src: "/companies/bytedance.svg",
+      src: "/companies/bytedance-original.png",
       alt: "字节跳动 Logo",
-      width: 256,
+      width: 960,
       height: 256,
     });
     expect(experiences.find(({ organization }) => organization === "美团")?.logo.alt).toBe("美团 Logo");

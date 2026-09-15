@@ -2,7 +2,8 @@
 
 These assets reuse the repository's existing artwork and the user-provided reference. No raster source was enlarged.
 
-- `bytedance.svg`: graphic paths extracted from the existing vector wordmark; blue/teal fills matched to the supplied reference, not asserted as official brand color specifications.
+- `bytedance-original.png`: 960 x 256 PNG rendered at 4x density from the complete white ByteDance wordmark SVG in commit `3ec8b1a`. It restores the original site mark without enlarging a raster source.
+- `bytedance.svg`: superseded square graphic retained as an unused historical asset.
 - `iflytek.svg`: graphic path extracted from the existing vector wordmark.
 - `meituan.png`: 409 x 400 graphic extracted from the 1130 x 400 PNG in commit `05d4e2f`.
 - `bosszhipin.png`: original 115 x 115 PNG from commit `05d4e2f`, replacing the 16 x 16 favicon.

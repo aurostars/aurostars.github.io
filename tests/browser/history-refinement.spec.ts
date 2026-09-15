@@ -69,7 +69,7 @@ for (const width of [390, 768, 1024, 1440]) {
   });
 }
 
-test("company graphics are square, loaded and contain enough pixels for their slots", async ({ page }) => {
+test("company logos are loaded and contain enough pixels for their slots", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "networkidle" });
   for (const image of await page.locator(".company-logo").all()) {
@@ -80,9 +80,33 @@ test("company graphics are square, loaded and contain enough pixels for their sl
     }));
     expect(state.loaded).toBe(true);
     expect(state.width / state.height).toBeGreaterThanOrEqual(0.8);
-    expect(state.width / state.height).toBeLessThanOrEqual(1.25);
+    const isWordmark = await image.getAttribute("alt") === "字节跳动 Logo";
+    expect(state.width / state.height).toBeLessThanOrEqual(isWordmark ? 4 : 1.25);
     expect(state.width).toBeGreaterThanOrEqual(48);
   }
+});
+
+test("wide desktop balances the role column between the longest description and dates", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await page.evaluate(() => document.fonts.ready);
+  const spacing = await page.locator(".experience-list").evaluate(list => {
+    const textBox = (node: Element) => {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      return range.getBoundingClientRect();
+    };
+    const right = Math.max(...Array.from(list.querySelectorAll(".experience-highlight"), node => textBox(node).right));
+    const roles = Array.from(list.querySelectorAll(".experience-role"), textBox);
+    const dateLeft = Math.min(...Array.from(list.querySelectorAll(".experience-period"), node => textBox(node).left));
+    return { left: Math.min(...roles.map(box => box.left)) - right, right: dateLeft - Math.max(...roles.map(box => box.right)) };
+  });
+  expect(spacing.left).toBeGreaterThan(24);
+  expect(spacing.right).toBeGreaterThan(24);
+  expect(Math.abs(spacing.left - spacing.right)).toBeLessThan(24);
+  const logo = page.getByRole("img", { name: "字节跳动 Logo", exact: true });
+  await expect(logo.locator("..")).toHaveAttribute("data-logo-plate", "dark");
+  expect(await logo.evaluate((node: HTMLImageElement) => node.naturalWidth / node.naturalHeight)).toBeGreaterThan(3);
 });
 
 test("updated internship summaries and the high-resolution institute asset render", async ({ page }) => {

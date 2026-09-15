@@ -230,7 +230,7 @@ export const experiences: ExperienceItem[] = [
     organization: "字节跳动",
     role: "AI 产品经理",
     highlight: "企业 Agent 和团队数字员工的搭建与迭代",
-    logo: { src: "/companies/bytedance.svg", alt: "字节跳动 Logo", width: 256, height: 256 },
+    logo: { src: "/companies/bytedance-original.png", alt: "字节跳动 Logo", width: 960, height: 256 },
   },
   {
     period: "2026.03 - 2026.07",
