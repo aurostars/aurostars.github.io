@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -174,6 +175,9 @@ describe("portfolio content", () => {
   it("uses the uploaded self-contained color ByteDance SVG", () => {
     const svg = readFileSync(join(process.cwd(), "public/companies/bytedance-color.svg"), "utf8");
 
+    expect(createHash("sha256").update(svg).digest("hex")).toBe(
+      "3d37647be262c79b044e293bb1a4993202537e9f9ffdbd2bbe7e9fc5378d1005",
+    );
     expect(svg).toContain("<title>ByteDance</title>");
     expect(svg).toContain('viewBox="0 0 24 24"');
     expect(svg).toContain('fill="#00C8D2"');
