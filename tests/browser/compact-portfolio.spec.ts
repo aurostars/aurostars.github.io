@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import sharp from "sharp";
 
 const viewports = [
@@ -155,20 +155,6 @@ function rectanglesOverlap(
     && first.x + first.width > second.x + epsilon
     && first.y < second.y + second.height - epsilon
     && first.y + first.height > second.y + epsilon;
-}
-
-async function injectProjectFixtures(page: Page, count: 5 | 6) {
-  await page.locator(".case-grid").evaluate((grid, targetCount) => {
-    const sourceCards = Array.from(grid.children);
-    for (let index = sourceCards.length; index < targetCount; index += 1) {
-      const fixture = sourceCards[index % sourceCards.length].cloneNode(true) as HTMLElement;
-      fixture.dataset.testFixture = `project-${index + 1}`;
-      const button = fixture.querySelector("button");
-      button?.setAttribute("aria-label", `查看项目详情：测试案例 ${index + 1}`);
-      grid.append(fixture);
-    }
-    (grid as HTMLElement).dataset.projectCount = String(targetCount);
-  }, count);
 }
 
 test("dark theme uses final rendered pixels for text and focus contrast", async ({ page }) => {
@@ -374,7 +360,7 @@ test("company logo failure preserves the successful row, slot, and company text 
   expect(loadedSlotBox!.height).toBeCloseTo(48, 0);
 
   let failedRequest = false;
-  await page.route("**/companies/bytedance.svg", async (route) => {
+  await page.route("**/companies/bytedance-original.png", async (route) => {
     failedRequest = true;
     await route.abort("failed");
   });
@@ -414,59 +400,103 @@ test("project instruction stays adjacent to its heading and wraps without mobile
 });
 
 for (const viewport of viewports) {
-  for (const count of [5, 6] as const) {
-    test(`${viewport.width}px lays out ${count} real cards without overflow or placeholders`, async ({ page }) => {
-      await page.emulateMedia({ reducedMotion: "reduce" });
-      await page.setViewportSize(viewport);
-      await page.goto("/", { waitUntil: "networkidle" });
-      await injectProjectFixtures(page, count);
+  test(`${viewport.width}px lays out six real cards without overflow or placeholders`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize(viewport);
+    await page.goto("/", { waitUntil: "networkidle" });
 
-      const cards = page.locator(".case-card");
-      await expect(cards).toHaveCount(count);
-      await expect(page.locator(".case-card-placeholder, [data-placeholder]")).toHaveCount(0);
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
+    const cards = page.locator(".case-card");
+    await expect(cards).toHaveCount(6);
+    await expect(cards.nth(4)).toContainText("生活打卡网页");
+    await expect(cards.nth(5)).toContainText("小米 SU7 3D 展示网页");
+    await expect(page.locator(".case-card-placeholder, [data-placeholder]")).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
 
-      const boxes = await cards.evaluateAll((nodes) => nodes.map((node) => {
-        const { x, y, width, height } = node.getBoundingClientRect();
-        return { x, y, width, height };
-      }));
-      for (const box of boxes) {
-        expect(box.width).toBeGreaterThan(0);
-        expect(box.height).toBeGreaterThan(0);
-        expect(box.x).toBeGreaterThanOrEqual(0);
-        expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+    const boxes = await cards.evaluateAll((nodes) => nodes.map((node) => {
+      const { x, y, width, height } = node.getBoundingClientRect();
+      return { x, y, width, height };
+    }));
+    for (const box of boxes) {
+      expect(box.width).toBeGreaterThan(0);
+      expect(box.height).toBeGreaterThan(0);
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+    }
+    for (let rowStart = 0; rowStart < boxes.length; rowStart += viewport.columns) {
+      const row = boxes.slice(rowStart, rowStart + viewport.columns);
+      expect(Math.max(...row.map(({ y }) => y)) - Math.min(...row.map(({ y }) => y))).toBeLessThanOrEqual(1);
+      for (let index = 1; index < row.length; index += 1) {
+        expect(row[index].x).toBeGreaterThan(row[index - 1].x);
       }
-      for (let rowStart = 0; rowStart < count; rowStart += viewport.columns) {
-        const row = boxes.slice(rowStart, rowStart + viewport.columns);
-        expect(Math.max(...row.map(({ y }) => y)) - Math.min(...row.map(({ y }) => y))).toBeLessThanOrEqual(1);
-        for (let index = 1; index < row.length; index += 1) {
-          expect(row[index].x).toBeGreaterThan(row[index - 1].x);
-        }
+    }
+    for (let first = 0; first < boxes.length; first += 1) {
+      for (let second = first + 1; second < boxes.length; second += 1) {
+        expect(rectanglesOverlap(boxes[first], boxes[second]), `cards ${first + 1} and ${second + 1} overlap`).toBe(false);
       }
-      for (let first = 0; first < boxes.length; first += 1) {
-        for (let second = first + 1; second < boxes.length; second += 1) {
-          expect(rectanglesOverlap(boxes[first], boxes[second]), `cards ${first + 1} and ${second + 1} overlap`).toBe(false);
-        }
-      }
-      expect(boxes[viewport.columns].y).toBeGreaterThan(boxes[0].y);
+    }
+    expect(boxes[viewport.columns].y).toBeGreaterThan(boxes[0].y);
 
-      if (count === 5) {
-        expect(Math.max(...boxes.map(({ width }) => width)) - Math.min(...boxes.map(({ width }) => width)))
-          .toBeLessThanOrEqual(1);
-        const lastRowStart = Math.floor((count - 1) / viewport.columns) * viewport.columns;
-        expect(Math.abs(boxes[lastRowStart].x - boxes[0].x)).toBeLessThanOrEqual(1);
-      }
-
-      if (count === 6 && viewport.columns === 3) {
-        expect(Math.max(...boxes.slice(0, 3).map(({ y }) => y)) - Math.min(...boxes.slice(0, 3).map(({ y }) => y)))
-          .toBeLessThanOrEqual(1);
-        expect(Math.max(...boxes.slice(3).map(({ y }) => y)) - Math.min(...boxes.slice(3).map(({ y }) => y)))
-          .toBeLessThanOrEqual(1);
-        expect(boxes[3].y).toBeGreaterThan(boxes[0].y);
-      }
-    });
-  }
+    if (viewport.columns === 3) {
+      expect(Math.max(...boxes.slice(0, 3).map(({ y }) => y)) - Math.min(...boxes.slice(0, 3).map(({ y }) => y)))
+        .toBeLessThanOrEqual(1);
+      expect(Math.max(...boxes.slice(3).map(({ y }) => y)) - Math.min(...boxes.slice(3).map(({ y }) => y)))
+        .toBeLessThanOrEqual(1);
+      expect(boxes[3].y).toBeGreaterThan(boxes[0].y);
+    }
+  });
 }
+
+for (const project of [
+  {
+    title: "生活打卡网页",
+    releaseUrl: "https://aurostars.github.io/today-island-public/",
+  },
+  {
+    title: "小米 SU7 3D 展示网页",
+    releaseUrl: "https://aurostars.github.io/xiaomi-su7-interactive/#vehicle-stage",
+  },
+]) {
+  test(`${project.title} uses compact details and ordered external actions`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/", { waitUntil: "networkidle" });
+    const trigger = page.getByRole("button", { name: `查看项目详情：${project.title}` });
+    await trigger.click();
+    const dialog = page.getByRole("dialog", { name: project.title });
+    await expect(dialog.getByRole("heading", { name: "项目说明" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "已实现功能" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "背景" })).toHaveCount(0);
+    await expect(dialog.getByRole("heading", { name: "目标" })).toHaveCount(0);
+    await expect(dialog.getByRole("heading", { name: "工作流程" })).toHaveCount(0);
+
+    const actions = dialog.locator(".case-dialog-actions");
+    await expect(actions.locator(":scope > *")).toHaveCount(3);
+    expect(await actions.locator(":scope > *").evaluateAll((nodes) => nodes.map((node) => node.className))).toEqual([
+      "case-demo-link",
+      "case-source-link",
+      "case-dialog-close",
+    ]);
+    await expect(dialog.getByRole("link", { name: /查看展示网页/ })).toHaveAttribute("href", project.releaseUrl);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(trigger).toBeFocused();
+  });
+}
+
+test("mobile showcase header gives the title full width above its actions", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?project=today-island", { waitUntil: "networkidle" });
+  const dialog = page.getByRole("dialog", { name: "生活打卡网页" });
+  const heading = dialog.locator(".case-dialog-heading");
+  const actions = dialog.locator(".case-dialog-actions");
+  const [headingBox, actionsBox] = await Promise.all([heading.boundingBox(), actions.boundingBox()]);
+
+  expect(headingBox).not.toBeNull();
+  expect(actionsBox).not.toBeNull();
+  expect(headingBox!.width).toBeGreaterThan(250);
+  expect(actionsBox!.y).toBeGreaterThanOrEqual(headingBox!.y + headingBox!.height);
+});
 
 test("detail header owns the only source link and the close affordance uses a pointer cursor", async ({ page }) => {
   await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });

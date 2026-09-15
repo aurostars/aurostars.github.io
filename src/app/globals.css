@@ -675,7 +675,13 @@ button:focus-visible {
   }
 
   .case-dialog-header {
+    align-items: stretch;
+    flex-direction: column;
     padding: calc(0.75rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right)) 0.75rem calc(1rem + env(safe-area-inset-left));
+  }
+
+  .case-dialog-actions {
+    justify-content: flex-start;
   }
 
   .case-dialog-scroll {

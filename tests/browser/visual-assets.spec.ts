@@ -150,6 +150,8 @@ test("every project renders its selected images without loading failures and wit
     { slug: "interview-review", title: "面试复盘助手", count: 1 },
     { slug: "resume-builder", title: "智能简历编辑工具", count: 1 },
     { slug: "meeting-minutes", title: "智能会议纪要工具", count: 1 },
+    { slug: "today-island", title: "生活打卡网页", count: 1 },
+    { slug: "xiaomi-su7-3d", title: "小米 SU7 3D 展示网页", count: 1 },
   ];
   for (const project of projects) {
     await page.goto(`/?project=${project.slug}`, { waitUntil: "networkidle" });
