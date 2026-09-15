@@ -267,7 +267,8 @@ for (const viewport of viewports.filter(({ width }) => width > 900)) {
       expect(titleBox).not.toBeNull();
       expect(contentBox).not.toBeNull();
       expect(fieldBoxes.every(Boolean)).toBe(true);
-      for (const fieldBox of fieldBoxes) {
+      // The logo spans the title and description; only text belongs to the title row.
+      for (const fieldBox of fieldBoxes.slice(1)) {
         expect(fieldBox!.y).toBeGreaterThanOrEqual(titleBox!.y - 1);
         expect(fieldBox!.y + fieldBox!.height).toBeLessThanOrEqual(titleBox!.y + titleBox!.height + 1);
       }
@@ -369,8 +370,8 @@ test("company logo failure preserves the successful row, slot, and company text 
   expect(loadedRowBox).not.toBeNull();
   expect(loadedSlotBox).not.toBeNull();
   expect(loadedCompanyBox).not.toBeNull();
-  expect(loadedSlotBox!.width).toBeCloseTo(72, 0);
-  expect(loadedSlotBox!.height).toBeCloseTo(32, 0);
+  expect(loadedSlotBox!.width).toBeCloseTo(48, 0);
+  expect(loadedSlotBox!.height).toBeCloseTo(48, 0);
 
   let failedRequest = false;
   await page.route("**/companies/bytedance.svg", async (route) => {

@@ -62,7 +62,7 @@ test("all company logos load with intrinsic width and contain fit", async ({ pag
     "字节跳动 Logo",
     "科大讯飞 Logo",
     "美团 Logo",
-    "国务院发展研究中心 Logo",
+    "国研大数据研究院 Logo",
     "BOSS直聘 Logo",
     "太平洋证券 Logo",
   ];

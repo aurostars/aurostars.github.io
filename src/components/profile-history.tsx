@@ -29,8 +29,7 @@ export function ProfileHistory({ education, experiences }: ProfileHistoryProps) 
                   <strong>{item.school}</strong>
                   <div className="education-meta">
                     <span>{item.faculty}</span>
-                    <span>{item.major}</span>
-                    <span>{item.degree}</span>
+                    <span>{item.major} {item.degree}</span>
                   </div>
                   <time>{item.period}</time>
                 </div>

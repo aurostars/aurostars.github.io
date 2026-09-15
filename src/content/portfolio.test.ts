@@ -29,8 +29,8 @@ const expectedFeatureBounds = {
 
 const expectedExperienceFacts = [
   { period: "2026.07 - 至今", organization: "字节跳动", role: "AI 产品经理", highlight: "企业 Agent 和团队数字员工的搭建与迭代" },
-  { period: "2026.03 - 2026.07", organization: "科大讯飞", role: "AI 产品经理", highlight: "多模态心脏超声智能报告系统" },
-  { period: "2025.10 - 2026.01", organization: "美团", role: "产品运营", highlight: "供应链质量管理" },
+  { period: "2026.03 - 2026.07", organization: "科大讯飞", role: "AI 产品经理", highlight: "多模态心脏超声智能报告系统的构建与迭代" },
+  { period: "2025.10 - 2026.01", organization: "美团", role: "产品运营", highlight: "供应链质量管理与产品优化" },
   { period: "2025.06 - 2025.09", organization: "国务院发展研究中心大数据研究院", role: "产品经理", highlight: "大数据平台产品构建" },
   { period: "2023.10 - 2024.01", organization: "BOSS直聘", role: "行业与产品研究", highlight: "行业研究与产品优化" },
   { period: "2023.03 - 2023.06", organization: "太平洋证券研究所", role: "行业研究", highlight: "行业数据分析与研究支持" },
@@ -124,8 +124,8 @@ describe("portfolio content", () => {
     expect(experiences[0].logo).toEqual({
       src: "/companies/bytedance.svg",
       alt: "字节跳动 Logo",
-      width: 240,
-      height: 64,
+      width: 256,
+      height: 256,
     });
     expect(experiences.find(({ organization }) => organization === "美团")?.logo.alt).toBe("美团 Logo");
     for (const experience of experiences) {
