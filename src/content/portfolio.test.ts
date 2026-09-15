@@ -33,10 +33,10 @@ const expectedFeatureBounds = {
   "xiaomi-su7-3d": { count: 7, first: "支持拖拽旋转车辆与滚动自动切换视角。", last: "展示 800V 高压平台、智能驾驶感知与 HyperOS 智能座舱。" },
 } as const;
 
-const expectedReleaseUrls = {
+const expectedReleaseUrls: Partial<Record<(typeof portfolioCases)[number]["slug"], string>> = {
   "today-island": "https://aurostars.github.io/today-island-public/",
   "xiaomi-su7-3d": "https://aurostars.github.io/xiaomi-su7-interactive/#vehicle-stage",
-} as const;
+};
 
 const expectedExperienceFacts = [
   { period: "2026.07 - 至今", organization: "字节跳动", role: "AI 产品经理", highlight: "企业 Agent 和团队数字员工的搭建与迭代" },
