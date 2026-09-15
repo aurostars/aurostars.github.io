@@ -25,7 +25,6 @@ interface ProjectCaseBase {
   features: string[];
   repositoryUrl: string;
   media: ProjectMedia[];
-  provenance?: string;
 }
 
 export interface FullProjectCase extends ProjectCaseBase {
@@ -88,7 +87,6 @@ export const portfolioCases: ProjectCase[] = [
       { src: "/projects/job-application-helper/extension-popup.png", alt: "秋招网申助手点击扩展后打开的界面", width: 360, height: 531 },
       { src: "/projects/job-application-helper/profile-manager.png", alt: "秋招网申助手的个人信息设置页面", width: 1920, height: 1563 },
     ],
-    provenance: "独立开发项目，页面只展示仓库和真实运行结果可验证的功能。",
   },
   {
     slug: "interview-review",
@@ -116,7 +114,6 @@ export const portfolioCases: ProjectCase[] = [
     media: [
       { src: "/projects/interview-review/analysis.png", alt: "面试复盘助手的逐题分析界面", width: 1920, height: 1563 },
     ],
-    provenance: "独立开发项目，效果描述不包含未经真实测试验证的准确率或提升比例。",
   },
   {
     slug: "resume-builder",
@@ -174,7 +171,6 @@ export const portfolioCases: ProjectCase[] = [
     media: [
       { src: "/projects/meeting-minutes/input.png", alt: "智能会议纪要工具的转写输入界面", width: 1920, height: 1563 },
     ],
-    provenance: "独立开发项目，页面只描述仓库中可验证的流程与功能。",
   },
   {
     slug: "today-island",
@@ -230,7 +226,7 @@ export const experiences: ExperienceItem[] = [
     organization: "字节跳动",
     role: "AI 产品经理",
     highlight: "企业 Agent 和团队数字员工的搭建与迭代",
-    logo: { src: "/companies/bytedance-original.png", alt: "字节跳动 Logo", width: 960, height: 256 },
+    logo: { src: "/companies/bytedance-color.svg", alt: "字节跳动 Logo", width: 24, height: 24 },
   },
   {
     period: "2026.03 - 2026.07",

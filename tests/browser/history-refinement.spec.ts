@@ -77,12 +77,12 @@ test("company logos are loaded and contain enough pixels for their slots", async
       loaded: node.complete && node.naturalWidth > 0,
       width: node.naturalWidth,
       height: node.naturalHeight,
+      source: node.currentSrc,
     }));
     expect(state.loaded).toBe(true);
     expect(state.width / state.height).toBeGreaterThanOrEqual(0.8);
-    const isWordmark = await image.getAttribute("alt") === "字节跳动 Logo";
-    expect(state.width / state.height).toBeLessThanOrEqual(isWordmark ? 4 : 1.25);
-    expect(state.width).toBeGreaterThanOrEqual(48);
+    expect(state.width / state.height).toBeLessThanOrEqual(1.25);
+    if (!state.source.endsWith(".svg")) expect(state.width).toBeGreaterThanOrEqual(48);
   }
 });
 
@@ -105,8 +105,9 @@ test("wide desktop balances the role column between the longest description and 
   expect(spacing.right).toBeGreaterThan(24);
   expect(Math.abs(spacing.left - spacing.right)).toBeLessThan(24);
   const logo = page.getByRole("img", { name: "字节跳动 Logo", exact: true });
-  await expect(logo.locator("..")).toHaveAttribute("data-logo-plate", "dark");
-  expect(await logo.evaluate((node: HTMLImageElement) => node.naturalWidth / node.naturalHeight)).toBeGreaterThan(3);
+  await expect(logo).toHaveAttribute("src", /\/companies\/bytedance-color\.svg$/);
+  await expect(logo.locator("..")).toHaveAttribute("data-logo-plate", "light");
+  expect(await logo.evaluate((node: HTMLImageElement) => node.naturalWidth / node.naturalHeight)).toBeCloseTo(1, 1);
 });
 
 test("updated internship summaries and the high-resolution institute asset render", async ({ page }) => {

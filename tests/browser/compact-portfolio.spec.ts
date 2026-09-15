@@ -360,7 +360,7 @@ test("company logo failure preserves the successful row, slot, and company text 
   expect(loadedSlotBox!.height).toBeCloseTo(48, 0);
 
   let failedRequest = false;
-  await page.route("**/companies/bytedance-original.png", async (route) => {
+  await page.route("**/companies/bytedance-color.svg", async (route) => {
     failedRequest = true;
     await route.abort("failed");
   });

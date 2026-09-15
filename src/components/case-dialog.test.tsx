@@ -123,15 +123,11 @@ describe("CaseDialog", () => {
     expect(screen.queryByRole("heading", { name: "核心问题" })).not.toBeInTheDocument();
   });
 
-  it.each(portfolioCases)("renders provenance only when defined for $title", (project) => {
+  it.each(portfolioCases)("does not render provenance for $title", (project) => {
     renderDialog({ project });
     const provenance = screen.getByRole("dialog", { name: project.title }).querySelector(".case-provenance");
 
-    if (project.provenance) {
-      expect(provenance).toHaveTextContent(project.provenance);
-    } else {
-      expect(provenance).not.toBeInTheDocument();
-    }
+    expect(provenance).not.toBeInTheDocument();
   });
 
   it.each(portfolioCases)("uses the approved gallery layout and media count for $title", (project) => {

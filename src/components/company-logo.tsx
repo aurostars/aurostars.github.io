@@ -6,10 +6,9 @@ import type { CompanyLogo as CompanyLogoData } from "@/content/portfolio";
 
 export function CompanyLogo({ logo }: { logo: CompanyLogoData }) {
   const [failed, setFailed] = useState(false);
-  const plate = logo.src === "/companies/bytedance-original.png" ? "dark" : "light";
 
   return (
-    <span className="company-logo-plate" data-logo-plate={plate}>
+    <span className="company-logo-plate" data-logo-plate="light">
       {failed ? null : (
         <Image
           className="company-logo"

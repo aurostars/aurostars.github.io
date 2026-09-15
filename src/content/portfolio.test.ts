@@ -67,9 +67,12 @@ function expectAssetDimensions(src: string, width: number, height: number) {
   }
 
   const svg = readFileSync(assetPath, "utf8");
-  expect(svg, `${src} should be an SVG with matching intrinsic dimensions`).toMatch(
-    new RegExp(`<svg[^>]*width=["']${width}["'][^>]*height=["']${height}["']`),
-  );
+  const numericDimensions = new RegExp(`<svg[^>]*width=["']${width}["'][^>]*height=["']${height}["']`);
+  const viewBoxDimensions = new RegExp(`viewBox=["'][\\d.-]+\\s+[\\d.-]+\\s+${width}\\s+${height}["']`);
+  expect(
+    numericDimensions.test(svg) || viewBoxDimensions.test(svg),
+    `${src} should declare matching dimensions or viewBox`,
+  ).toBe(true);
 }
 
 describe("portfolio content", () => {
@@ -156,16 +159,30 @@ describe("portfolio content", () => {
       expectedExperienceFacts,
     );
     expect(experiences[0].logo).toEqual({
-      src: "/companies/bytedance-original.png",
+      src: "/companies/bytedance-color.svg",
       alt: "字节跳动 Logo",
-      width: 960,
-      height: 256,
+      width: 24,
+      height: 24,
     });
     expect(experiences.find(({ organization }) => organization === "美团")?.logo.alt).toBe("美团 Logo");
     for (const experience of experiences) {
       expect(experience.logo.src.startsWith("/companies/")).toBe(true);
       expectAssetDimensions(experience.logo.src, experience.logo.width, experience.logo.height);
     }
+  });
+
+  it("uses the uploaded self-contained color ByteDance SVG", () => {
+    const svg = readFileSync(join(process.cwd(), "public/companies/bytedance-color.svg"), "utf8");
+
+    expect(svg).toContain("<title>ByteDance</title>");
+    expect(svg).toContain('viewBox="0 0 24 24"');
+    expect(svg).toContain('fill="#00C8D2"');
+    expect(svg).toContain('fill="#3C8CFF"');
+    expect(svg).toContain('fill="#78E6DC"');
+    expect(svg).toContain('fill="#325AB4"');
+    expect(svg).not.toMatch(/<script\b/i);
+    expect(svg).not.toMatch(/<foreignObject\b/i);
+    expect(svg).not.toMatch(remoteSvgResource);
   });
 
   it("uses the approved education fields and local school emblems", () => {
@@ -240,16 +257,11 @@ describe("portfolio content", () => {
     expect(portfolioCases.map(({ media }) => media.length)).toEqual([2, 1, 1, 1, 1, 1]);
   });
 
-  it("removes user problems and omits provenance only for Resume Builder", () => {
+  it("removes user problems and provenance from every project", () => {
     for (const item of portfolioCases) {
       expect(item).not.toHaveProperty("userProblems");
+      expect(item).not.toHaveProperty("provenance");
     }
-    expect(portfolioCases.find(({ slug }) => slug === "resume-builder")).not.toHaveProperty("provenance");
-    expect(portfolioCases.filter(({ provenance }) => provenance !== undefined).map(({ provenance }) => provenance)).toEqual([
-      "独立开发项目，页面只展示仓库和真实运行结果可验证的功能。",
-      "独立开发项目，效果描述不包含未经真实测试验证的准确率或提升比例。",
-      "独立开发项目，页面只描述仓库中可验证的流程与功能。",
-    ]);
   });
 
   it("constructs the approved visible email and limits contact to email and GitHub", () => {

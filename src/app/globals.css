@@ -622,16 +622,6 @@ button:focus-visible {
   line-height: 1.6;
 }
 
-.case-provenance {
-  max-width: 76ch;
-  margin: 0;
-  padding-left: 1rem;
-  border-left: 3px solid var(--color-accent);
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  line-height: 1.7;
-}
-
 @media (max-width: 1079px) {
   .case-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

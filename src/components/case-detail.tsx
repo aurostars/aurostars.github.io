@@ -77,7 +77,6 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
         </ul>
       </section>
 
-      {project.provenance ? <p className="case-provenance">{project.provenance}</p> : null}
     </div>
   );
 }
