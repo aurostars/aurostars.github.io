@@ -37,27 +37,36 @@ export function CaseDetail({ project }: { project: ProjectCase }) {
         ))}
       </div>
 
-      <div className="case-detail-grid">
-        <section className="case-background" aria-labelledby={`${project.slug}-background`}>
-          <h4 id={`${project.slug}-background`}>背景</h4>
-          <p>{project.background}</p>
-        </section>
-        <section className="case-goal" aria-labelledby={`${project.slug}-goal`}>
-          <h4 id={`${project.slug}-goal`}>目标</h4>
-          <p>{project.goal}</p>
-        </section>
-      </div>
+      {project.presentation === "full" ? (
+        <>
+          <div className="case-detail-grid">
+            <section className="case-background" aria-labelledby={`${project.slug}-background`}>
+              <h4 id={`${project.slug}-background`}>背景</h4>
+              <p>{project.background}</p>
+            </section>
+            <section className="case-goal" aria-labelledby={`${project.slug}-goal`}>
+              <h4 id={`${project.slug}-goal`}>目标</h4>
+              <p>{project.goal}</p>
+            </section>
+          </div>
 
-      <section className="case-workflow" aria-labelledby={`${project.slug}-workflow`}>
-        <h4 id={`${project.slug}-workflow`}>工作流程</h4>
-        <ol className="workflow">
-          {project.workflow.map((step) => (
-            <li data-testid="workflow-step" key={step}>
-              {step}
-            </li>
-          ))}
-        </ol>
-      </section>
+          <section className="case-workflow" aria-labelledby={`${project.slug}-workflow`}>
+            <h4 id={`${project.slug}-workflow`}>工作流程</h4>
+            <ol className="workflow">
+              {project.workflow.map((step) => (
+                <li data-testid="workflow-step" key={step}>
+                  {step}
+                </li>
+              ))}
+            </ol>
+          </section>
+        </>
+      ) : (
+        <section className="case-description" aria-labelledby={`${project.slug}-description`}>
+          <h4 id={`${project.slug}-description`}>项目说明</h4>
+          <p>{project.description}</p>
+        </section>
+      )}
 
       <section className="case-features" aria-labelledby={`${project.slug}-features`}>
         <h4 id={`${project.slug}-features`}>已实现功能</h4>

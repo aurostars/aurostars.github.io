@@ -431,10 +431,13 @@ button:focus-visible {
 .case-dialog-actions {
   display: flex;
   flex: 0 0 auto;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 
+.case-demo-link,
 .case-source-link,
 .case-dialog-close {
   display: inline-flex;
@@ -458,12 +461,14 @@ button:focus-visible {
   cursor: pointer;
 }
 
+.case-demo-link:hover,
 .case-source-link:hover,
 .case-dialog-close:hover {
   border-color: var(--color-accent);
   background: var(--portfolio-accent-soft);
 }
 
+.case-demo-link:active,
 .case-source-link:active,
 .case-dialog-close:active {
   transform: translateY(1px);
@@ -529,12 +534,14 @@ button:focus-visible {
 }
 
 .case-detail-grid section,
+.case-description,
 .case-workflow,
 .case-features {
   min-width: 0;
 }
 
 .case-detail-grid h4,
+.case-description h4,
 .case-workflow h4,
 .case-features h4 {
   margin: 0 0 1rem;
@@ -542,6 +549,7 @@ button:focus-visible {
   font-weight: 750;
 }
 
+.case-description p,
 .case-detail-grid p {
   max-width: 60ch;
   margin: 0;

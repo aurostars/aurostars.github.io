@@ -185,7 +185,7 @@ describe("home page", () => {
 
   it("renders exactly one case card per project and no future placeholders", () => {
     const { container } = render(<Home />);
-    expect(container.querySelectorAll(".case-card")).toHaveLength(4);
+    expect(container.querySelectorAll(".case-card")).toHaveLength(6);
     expect(screen.queryByText(/未来案例|待添加/)).not.toBeInTheDocument();
   });
 
@@ -198,7 +198,7 @@ describe("home page", () => {
     expect(location.search).toBe("?project=job-application-helper");
   });
 
-  it.each(portfolioCases)("renders $title verified features and only its source link", async (project) => {
+  it.each(portfolioCases)("renders $title verified features and approved detail structure", async (project) => {
     const user = userEvent.setup();
     render(<Home />);
     await user.click(screen.getByRole("button", { name: `查看项目详情：${project.title}` }));
@@ -211,14 +211,23 @@ describe("home page", () => {
     const gallery = dialog.getByRole("group", { name: `${project.title}真实产品界面` });
     expect(title.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(summary.compareDocumentPosition(gallery) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(dialog.getByText(project.background)).toBeInTheDocument();
-    expect(dialog.getAllByTestId("workflow-step")).toHaveLength(5);
+    if (project.presentation === "full") {
+      expect(dialog.getByText(project.background)).toBeInTheDocument();
+      expect(dialog.getAllByTestId("workflow-step")).toHaveLength(5);
+      expect(dialog.queryByRole("link", { name: /查看展示网页/ })).not.toBeInTheDocument();
+    } else {
+      expect(dialog.getByText(project.description)).toBeInTheDocument();
+      expect(dialog.queryByRole("heading", { name: "背景" })).not.toBeInTheDocument();
+      expect(dialog.queryByRole("heading", { name: "目标" })).not.toBeInTheDocument();
+      expect(dialog.queryByRole("heading", { name: "工作流程" })).not.toBeInTheDocument();
+      expect(dialog.getByRole("link", { name: /查看展示网页/ })).toHaveAttribute("href", project.releaseUrl);
+    }
     expect(dialog.getByRole("heading", { name: "已实现功能" })).toBeInTheDocument();
     for (const feature of project.features) {
       expect(dialog.getByText(feature)).toBeInTheDocument();
     }
     expect(dialog.getByRole("link", { name: /查看源码/ })).toHaveAttribute("href", project.repositoryUrl);
-    expect(dialog.getAllByRole("link")).toHaveLength(1);
+    expect(dialog.getAllByRole("link")).toHaveLength(project.presentation === "showcase" ? 2 : 1);
     expect(dialog.queryByText("下载版本")).not.toBeInTheDocument();
     expect(dialog.queryByText("查看上游项目")).not.toBeInTheDocument();
   });

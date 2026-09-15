@@ -3,10 +3,20 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CaseDialog } from "@/components/case-dialog";
-import { portfolioCases, type ProjectCase } from "@/content/portfolio";
+import {
+  portfolioCases,
+  type FullProjectCase,
+  type ProjectCase,
+  type ShowcaseProjectCase,
+} from "@/content/portfolio";
+
+const fullProject = portfolioCases.find((project): project is FullProjectCase => project.presentation === "full")!;
+const showcaseProject = portfolioCases.find(
+  (project): project is ShowcaseProjectCase => project.presentation === "showcase",
+)!;
 
 function renderDialog({
-  project = portfolioCases[0] as ProjectCase | null,
+  project = fullProject as ProjectCase | null,
   onClose = vi.fn(),
   returnFocusTo = null as HTMLElement | null,
 } = {}) {
@@ -46,7 +56,7 @@ describe("CaseDialog", () => {
   });
 
   it("renders one source link before close in the header and none in scroll content", () => {
-    renderDialog({ project: portfolioCases[0] });
+    renderDialog({ project: fullProject });
     const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
     const actions = dialog.querySelector(".case-dialog-actions");
     const sourceLink = within(dialog).getByRole("link", { name: "查看源码（新窗口）" });
@@ -63,8 +73,35 @@ describe("CaseDialog", () => {
     expect(dialog.querySelector(".case-dialog-scroll .case-detail-links")).not.toBeInTheDocument();
   });
 
+  it("renders the showcase link before source and close", () => {
+    renderDialog({ project: showcaseProject });
+    const dialog = screen.getByRole("dialog", { name: showcaseProject.title });
+    const actions = dialog.querySelector(".case-dialog-actions");
+    const demoLink = within(dialog).getByRole("link", { name: "查看展示网页（新窗口）" });
+    const sourceLink = within(dialog).getByRole("link", { name: "查看源码（新窗口）" });
+    const closeButton = within(dialog).getByRole("button", { name: `关闭${showcaseProject.title}详情` });
+
+    expect(Array.from(actions?.children ?? [])).toEqual([demoLink, sourceLink, closeButton]);
+    expect(demoLink).toHaveClass("case-demo-link");
+    expect(demoLink).toHaveAttribute("href", showcaseProject.releaseUrl);
+    expect(demoLink).toHaveAttribute("target", "_blank");
+    expect(demoLink).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("renders compact showcase details without full-case sections", () => {
+    renderDialog({ project: showcaseProject });
+    const dialog = screen.getByRole("dialog", { name: showcaseProject.title });
+
+    expect(within(dialog).getByRole("heading", { name: "项目说明" })).toBeInTheDocument();
+    expect(within(dialog).getByText(showcaseProject.description)).toBeInTheDocument();
+    expect(within(dialog).queryByRole("heading", { name: "背景" })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("heading", { name: "目标" })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("heading", { name: "工作流程" })).not.toBeInTheDocument();
+    expect(within(dialog).getByRole("heading", { name: "已实现功能" })).toBeInTheDocument();
+  });
+
   it("renders background and goal as distinct full-row detail sections before workflow", () => {
-    renderDialog({ project: portfolioCases[0] });
+    renderDialog({ project: fullProject });
     const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
     const grid = dialog.querySelector(".case-detail-grid");
     const background = dialog.querySelector(".case-background");
@@ -72,8 +109,8 @@ describe("CaseDialog", () => {
     const workflow = dialog.querySelector(".case-workflow");
 
     expect(Array.from(grid?.children ?? [])).toEqual([background, goal]);
-    expect(background).toHaveTextContent(portfolioCases[0].background);
-    expect(goal).toHaveTextContent(portfolioCases[0].goal);
+    expect(background).toHaveTextContent(fullProject.background);
+    expect(goal).toHaveTextContent(fullProject.goal);
     expect(goal).not.toBeNull();
     expect(workflow).not.toBeNull();
     if (!goal || !workflow) throw new Error("Expected goal and workflow sections");
@@ -81,7 +118,7 @@ describe("CaseDialog", () => {
   });
 
   it("does not render the removed core-problems section", () => {
-    renderDialog({ project: portfolioCases[0] });
+    renderDialog({ project: fullProject });
 
     expect(screen.queryByRole("heading", { name: "核心问题" })).not.toBeInTheDocument();
   });
@@ -110,7 +147,7 @@ describe("CaseDialog", () => {
   it("locks body scroll while open and restores prior inline styles after exit", async () => {
     document.body.style.overflow = "visible";
     document.body.style.paddingRight = "7px";
-    const { rerenderProject } = renderDialog({ project: portfolioCases[0] });
+    const { rerenderProject } = renderDialog({ project: fullProject });
     expect(document.body.style.overflow).toBe("hidden");
     expect(document.body.style.paddingRight).not.toBe("7px");
     rerenderProject(null);
@@ -121,7 +158,7 @@ describe("CaseDialog", () => {
 
   it("handles the native Escape cancel event once", () => {
     const onClose = vi.fn();
-    renderDialog({ project: portfolioCases[0], onClose });
+    renderDialog({ project: fullProject, onClose });
     const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
     fireEvent(dialog, new Event("cancel", { bubbles: false, cancelable: true }));
     expect(onClose).toHaveBeenCalledOnce();
@@ -130,14 +167,14 @@ describe("CaseDialog", () => {
   it("closes with the explicit close button", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    renderDialog({ project: portfolioCases[0], onClose });
+    renderDialog({ project: fullProject, onClose });
     await user.click(screen.getByRole("button", { name: "关闭秋招网申助手详情" }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("only backdrop-closes when pointer down and up both target the dialog", () => {
     const onClose = vi.fn();
-    renderDialog({ project: portfolioCases[0], onClose });
+    renderDialog({ project: fullProject, onClose });
     const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
     fireEvent.pointerDown(dialog);
     fireEvent.pointerUp(dialog);
@@ -146,14 +183,14 @@ describe("CaseDialog", () => {
 
   it("does not backdrop-close after a pointer sequence that starts in content", () => {
     const onClose = vi.fn();
-    renderDialog({ project: portfolioCases[0], onClose });
-    fireEvent.pointerDown(screen.getByText(portfolioCases[0].background));
+    renderDialog({ project: fullProject, onClose });
+    fireEvent.pointerDown(screen.getByText(fullProject.background));
     fireEvent.pointerUp(screen.getByRole("dialog", { name: "秋招网申助手" }));
     expect(onClose).not.toHaveBeenCalled();
   });
 
   it("keeps the native dialog open until the panel exit finishes", async () => {
-    const { rerenderProject, fallbackFocusRef } = renderDialog({ project: portfolioCases[0] });
+    const { rerenderProject, fallbackFocusRef } = renderDialog({ project: fullProject });
     const dialog = screen.getByRole("dialog", { name: "秋招网申助手" });
 
     rerenderProject(null);
@@ -165,7 +202,7 @@ describe("CaseDialog", () => {
   });
 
   it("replaces the animated panel when the selected project changes", async () => {
-    const { rerenderProject } = renderDialog({ project: portfolioCases[0] });
+    const { rerenderProject } = renderDialog({ project: fullProject });
     const firstPanel = screen.getByRole("dialog", { name: "秋招网申助手" }).querySelector(".case-dialog-panel");
 
     rerenderProject(portfolioCases[1]);
@@ -178,14 +215,14 @@ describe("CaseDialog", () => {
     const trigger = document.createElement("button");
     trigger.textContent = "项目触发器";
     document.body.append(trigger);
-    const { rerenderProject } = renderDialog({ project: portfolioCases[0], returnFocusTo: trigger });
+    const { rerenderProject } = renderDialog({ project: fullProject, returnFocusTo: trigger });
     rerenderProject(null);
     await waitFor(() => expect(trigger).toHaveFocus());
     trigger.remove();
   });
 
   it("uses the project heading for deep-link focus fallback", async () => {
-    const { rerenderProject, fallbackFocusRef } = renderDialog({ project: portfolioCases[0], returnFocusTo: null });
+    const { rerenderProject, fallbackFocusRef } = renderDialog({ project: fullProject, returnFocusTo: null });
     rerenderProject(null);
     await waitFor(() => expect(fallbackFocusRef.current).toHaveFocus());
   });

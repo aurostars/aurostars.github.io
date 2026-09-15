@@ -129,6 +129,17 @@ export function CaseDialog({ project, onClose, returnFocusTo, fallbackFocusRef }
                 <p>{project.summary}</p>
               </div>
               <div className="case-dialog-actions">
+                {project.presentation === "showcase" ? (
+                  <a
+                    className="case-demo-link"
+                    href={project.releaseUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="查看展示网页（新窗口）"
+                  >
+                    查看展示网页<span className="sr-only">（新窗口）</span>
+                  </a>
+                ) : null}
                 <a
                   className="case-source-link"
                   href={project.repositoryUrl}
