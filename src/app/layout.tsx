@@ -1,16 +1,27 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
-import Link from "next/link";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "董星 — AI 产品经理",
-  description: "董星的个人主页",
+  metadataBase: new URL("https://aurostars.github.io"),
+  title: "董星的个人主页",
+  description: "董星的个人主页，记录教育与实习经历，并展示独立项目与真实产品实践。",
+  openGraph: {
+    title: "董星的个人主页",
+    description: "查看董星的教育、实习经历与个人项目。",
+    url: "https://aurostars.github.io",
+    siteName: "董星的个人主页",
+    locale: "zh_CN",
+    type: "website",
+    images: [
+      {
+        url: "/og-portfolio.png",
+        width: 1200,
+        height: 630,
+        alt: "董星的 AI 产品案例作品集",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -19,49 +30,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col mesh-bg overflow-x-hidden">
-        <header className="sticky top-0 z-50 glass-strong">
-          <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-            <Link className="hero-gradient-text text-lg font-bold tracking-tight" href="/">
-              董星
-            </Link>
-            <ul className="flex gap-1">
-              <li>
-                <Link className="rounded-full px-4 py-1.5 text-sm font-medium bg-blue-500/20 text-blue-400" href="/">
-                  首页
-                </Link>
-              </li>
-              <li>
-                <a className="rounded-full px-4 py-1.5 text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300" href="#projects">
-                  项目
-                </a>
-              </li>
-              <li>
-                <a className="rounded-full px-4 py-1.5 text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300" href="#timeline">
-                  经历
-                </a>
-              </li>
-              <li>
-                <a className="rounded-full px-4 py-1.5 text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-all duration-300" href="#contact">
-                  联系
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </header>
-        <main className="min-h-[calc(100vh-4rem)] overflow-x-hidden">
-          {children}
-        </main>
-        <footer className="mt-10 border-t border-white/5">
-          <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-6 py-10 text-sm text-slate-500 sm:flex-row sm:justify-between">
-            <p>&copy; 2026 董星. All rights reserved.</p>
-            <div className="flex items-center gap-5">
-              <a href="https://github.com/aurostars" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-blue-400">GitHub</a>
-              <a href="mailto:3056728260@qq.com" className="transition-colors hover:text-blue-400">邮箱</a>
-            </div>
-          </div>
-        </footer>
+    <html lang="zh-CN" className={`${GeistSans.variable} antialiased`}>
+      <body>
+        <a className="skip-link" href="#main-content">
+          跳到主要内容
+        </a>
+        <main id="main-content">{children}</main>
       </body>
     </html>
   );

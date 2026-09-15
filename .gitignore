@@ -12,8 +12,8 @@
 
 # testing
 /coverage
-/.superpowers/
-/.worktrees/
+/test-results/
+/playwright-report/
 
 # next.js
 /.next/
@@ -41,3 +41,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local workspaces and design exploration
+/.worktrees/
+/.superpowers/
