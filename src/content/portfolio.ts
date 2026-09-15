@@ -2,7 +2,9 @@ export type ProjectSlug =
   | "job-application-helper"
   | "interview-review"
   | "resume-builder"
-  | "meeting-minutes";
+  | "meeting-minutes"
+  | "today-island"
+  | "xiaomi-su7-3d";
 
 export interface ProjectMedia {
   src: string;
@@ -14,21 +16,32 @@ export interface ProjectMedia {
 export type CompanyLogo = ProjectMedia;
 export type SchoolLogo = ProjectMedia;
 
-export interface ProjectCase {
+interface ProjectCaseBase {
   slug: ProjectSlug;
   title: string;
   descriptor: string;
   summary: string;
-  background: string;
-  goal: string;
-  workflow: [string, string, string, string, string];
   highlights: string[];
   features: string[];
   repositoryUrl: string;
-  releaseUrl?: string;
   media: ProjectMedia[];
   provenance?: string;
 }
+
+export interface FullProjectCase extends ProjectCaseBase {
+  presentation: "full";
+  background: string;
+  goal: string;
+  workflow: [string, string, string, string, string];
+}
+
+export interface ShowcaseProjectCase extends ProjectCaseBase {
+  presentation: "showcase";
+  description: string;
+  releaseUrl: string;
+}
+
+export type ProjectCase = FullProjectCase | ShowcaseProjectCase;
 
 export interface EducationItem {
   school: string;
@@ -50,6 +63,7 @@ export interface ExperienceItem {
 export const portfolioCases: ProjectCase[] = [
   {
     slug: "job-application-helper",
+    presentation: "full",
     title: "秋招网申助手",
     descriptor: "浏览器扩展",
     summary: "把重复网申变成可核对、可追踪的智能填充流程。",
@@ -78,6 +92,7 @@ export const portfolioCases: ProjectCase[] = [
   },
   {
     slug: "interview-review",
+    presentation: "full",
     title: "面试复盘助手",
     descriptor: "AI Web 应用",
     summary: "把面试录音转化为逐题诊断和跨面试改进线索。",
@@ -105,6 +120,7 @@ export const portfolioCases: ProjectCase[] = [
   },
   {
     slug: "resume-builder",
+    presentation: "full",
     title: "智能简历编辑工具",
     descriptor: "二次开发项目",
     summary: "围绕写作、岗位对齐、模板排版和多格式导出优化简历工作流。",
@@ -132,6 +148,7 @@ export const portfolioCases: ProjectCase[] = [
   },
   {
     slug: "meeting-minutes",
+    presentation: "full",
     title: "智能会议纪要工具",
     descriptor: "LLM 工作流",
     summary: "用六阶段流程把会议转写整理为可复核的结构化纪要。",
@@ -158,6 +175,52 @@ export const portfolioCases: ProjectCase[] = [
       { src: "/projects/meeting-minutes/input.png", alt: "智能会议纪要工具的转写输入界面", width: 1920, height: 1563 },
     ],
     provenance: "独立开发项目，页面只描述仓库中可验证的流程与功能。",
+  },
+  {
+    slug: "today-island",
+    presentation: "showcase",
+    title: "生活打卡网页",
+    descriptor: "生活记录网站",
+    summary: "把饮水、运动、饮食与心情记录集中到一座本地生活小岛。",
+    description: "用于在浏览器中记录日常生活状态，数据保存在本机，并支持按日期查看和备份。",
+    highlights: ["八类生活记录", "每日进度汇总", "近三日心情", "本地数据备份"],
+    features: [
+      "记录饮水类型、容量、杯数和目标进度。",
+      "记录运动类型、时长与深蹲次数。",
+      "记录睡眠时长和晒太阳时间。",
+      "记录零食、水果和三餐并汇总营养数据。",
+      "记录学习时长和会议数量。",
+      "记录心情评分并展示近三日心情小岛。",
+      "支持本地保存、历史记录、数据导入导出及按日期清理。",
+    ],
+    repositoryUrl: "https://github.com/aurostars/today-island-public",
+    releaseUrl: "https://aurostars.github.io/today-island-public/",
+    media: [
+      { src: "/projects/today-island/overview.png", alt: "生活打卡网页的饮水记录与生活分类界面", width: 2706, height: 1764 },
+    ],
+  },
+  {
+    slug: "xiaomi-su7-3d",
+    presentation: "showcase",
+    title: "小米 SU7 3D 展示网页",
+    descriptor: "3D 交互网页",
+    summary: "用可交互 3D 车辆呈现小米 SU7 的外观、座舱与核心科技。",
+    description: "以可交互 3D 车辆为核心，呈现小米 SU7 外观、座舱和核心技术信息。",
+    highlights: ["3D 车辆交互", "外观配色切换", "多座席视角", "核心技术叙事"],
+    features: [
+      "支持拖拽旋转车辆与滚动自动切换视角。",
+      "支持多种车漆配色切换。",
+      "支持车辆开门交互。",
+      "支持外观与座舱模式切换。",
+      "支持主驾、副驾和后排座舱视角切换。",
+      "通过滚动叙事呈现空气动力学、纯电性能和智能座舱。",
+      "展示 800V 高压平台、智能驾驶感知与 HyperOS 智能座舱。",
+    ],
+    repositoryUrl: "https://github.com/aurostars/xiaomi-su7-interactive",
+    releaseUrl: "https://aurostars.github.io/xiaomi-su7-interactive/#vehicle-stage",
+    media: [
+      { src: "/projects/xiaomi-su7-3d/vehicle-stage.png", alt: "小米 SU7 3D 展示网页的车辆外观交互舞台", width: 2586, height: 1340 },
+    ],
   },
 ];
 

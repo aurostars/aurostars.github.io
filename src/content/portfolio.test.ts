@@ -11,6 +11,8 @@ const expectedSlugs = [
   "interview-review",
   "resume-builder",
   "meeting-minutes",
+  "today-island",
+  "xiaomi-su7-3d",
 ];
 
 const expectedRepositoryUrls = {
@@ -18,6 +20,8 @@ const expectedRepositoryUrls = {
   "interview-review": "https://github.com/aurostars/Interview-Review-Assistant",
   "resume-builder": "https://github.com/aurostars/Resume-Builder-and-Editor",
   "meeting-minutes": "https://github.com/aurostars/meeting-minutes-extractor",
+  "today-island": "https://github.com/aurostars/today-island-public",
+  "xiaomi-su7-3d": "https://github.com/aurostars/xiaomi-su7-interactive",
 } as const;
 
 const expectedFeatureBounds = {
@@ -25,6 +29,13 @@ const expectedFeatureBounds = {
   "resume-builder": { count: 11, first: "可视化简历创建、区块编辑与拖拽排序。", last: "本地简历数据与 API Key 管理。" },
   "interview-review": { count: 10, first: "M4A、MP3、WAV、AAC 录音或已有文本导入。", last: "按公司、岗位和时间线管理多场面试档案。" },
   "meeting-minutes": { count: 12, first: "六阶段智能纪要生成。", last: "SQLite 配置与会议数据持久化。" },
+  "today-island": { count: 7, first: "记录饮水类型、容量、杯数和目标进度。", last: "支持本地保存、历史记录、数据导入导出及按日期清理。" },
+  "xiaomi-su7-3d": { count: 7, first: "支持拖拽旋转车辆与滚动自动切换视角。", last: "展示 800V 高压平台、智能驾驶感知与 HyperOS 智能座舱。" },
+} as const;
+
+const expectedReleaseUrls = {
+  "today-island": "https://aurostars.github.io/today-island-public/",
+  "xiaomi-su7-3d": "https://aurostars.github.io/xiaomi-su7-interactive/#vehicle-stage",
 } as const;
 
 const expectedExperienceFacts = [
@@ -72,14 +83,37 @@ describe("portfolio content", () => {
     expect(portfolioCases.map((item) => item.slug)).not.toContain("aurostars.github.io");
   });
 
-  it("gives every case a complete five-step workflow and real repository link", () => {
+  it("gives full cases complete workflows and showcase cases verified display links", () => {
     for (const item of portfolioCases) {
-      expect(item.background.length).toBeGreaterThan(20);
-      expect(item.goal.length).toBeGreaterThan(10);
-      expect(item.workflow).toHaveLength(5);
       expect(item.repositoryUrl).toBe(expectedRepositoryUrls[item.slug]);
-      expect(item.releaseUrl).toBeUndefined();
+      if (item.presentation === "full") {
+        expect(item.background.length).toBeGreaterThan(20);
+        expect(item.goal.length).toBeGreaterThan(10);
+        expect(item.workflow).toHaveLength(5);
+        expect(item).not.toHaveProperty("releaseUrl");
+      } else {
+        expect(item.description.length).toBeGreaterThan(20);
+        expect(item.releaseUrl).toBe(expectedReleaseUrls[item.slug]);
+        expect(item).not.toHaveProperty("background");
+        expect(item).not.toHaveProperty("goal");
+        expect(item).not.toHaveProperty("workflow");
+      }
     }
+  });
+
+  it("appends the approved showcase projects with compact detail copy", () => {
+    expect(portfolioCases.slice(-2).map(({ title, presentation }) => ({ title, presentation }))).toEqual([
+      { title: "生活打卡网页", presentation: "showcase" },
+      { title: "小米 SU7 3D 展示网页", presentation: "showcase" },
+    ]);
+    expect(portfolioCases.at(-2)).toMatchObject({
+      descriptor: "生活记录网站",
+      description: "用于在浏览器中记录日常生活状态，数据保存在本机，并支持按日期查看和备份。",
+    });
+    expect(portfolioCases.at(-1)).toMatchObject({
+      descriptor: "3D 交互网页",
+      description: "以可交互 3D 车辆为核心，呈现小米 SU7 外观、座舱和核心技术信息。",
+    });
   });
 
   it("uses the approved verified feature-list boundaries and counts", () => {
@@ -200,8 +234,10 @@ describe("portfolio content", () => {
       { slug: "interview-review", sources: ["/projects/interview-review/analysis.png"] },
       { slug: "resume-builder", sources: ["/projects/resume-builder/workspace.png"] },
       { slug: "meeting-minutes", sources: ["/projects/meeting-minutes/input.png"] },
+      { slug: "today-island", sources: ["/projects/today-island/overview.png"] },
+      { slug: "xiaomi-su7-3d", sources: ["/projects/xiaomi-su7-3d/vehicle-stage.png"] },
     ]);
-    expect(portfolioCases.map(({ media }) => media.length)).toEqual([2, 1, 1, 1]);
+    expect(portfolioCases.map(({ media }) => media.length)).toEqual([2, 1, 1, 1, 1, 1]);
   });
 
   it("removes user problems and omits provenance only for Resume Builder", () => {
