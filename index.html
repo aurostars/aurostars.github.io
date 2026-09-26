@@ -1,0 +1,205 @@
+<!doctype html>
+<!-- 花园 2 / A little wonder. An interactive botanical playground, built with curiosity. -->
+<html lang="zh-CN" data-theme="light" data-season="spring">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="欢迎来到董星的花园。AI 产品经理，在每一段经历中保持好奇，积极学习。">
+    <meta name="theme-color" content="#f7f7f2">
+    <title>董星的彩色花园 · A little wonder</title>
+    <link rel="icon" href="./assets/sprout.svg" type="image/svg+xml">
+    <link rel="preload" href="./assets/caveat-bold.ttf" as="font" type="font/ttf" crossorigin>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./site.config.js" defer></script>
+    <script src="./navigation.js" defer></script>
+    <script src="./garden-state.js" defer></script>
+    <script src="./portfolio.js" defer></script>
+    <script src="./app.js" defer></script>
+    <script src="./garden-scene.js" defer></script>
+  </head>
+  <body>
+    <a href="#main" class="skip-link">跳到页面内容</a>
+    <header class="site-header">
+      <a class="wordmark" href="#home" aria-label="返回花园封面">
+        <span class="brand-flower" aria-hidden="true"><svg class="icon"><use href="./assets/icons.svg#sprout"></use></svg></span>
+        <span>aurostars<span class="wordmark-dot">.</span><small>A DIGITAL GARDEN</small></span>
+      </a>
+      <div class="season-switch" role="group" aria-label="切换花园季节">
+        <span class="season-prefix">今天是</span>
+        <button data-season-choice="spring" aria-pressed="true"><i></i>春</button>
+        <button data-season-choice="summer" aria-pressed="false"><i></i>夏</button>
+        <button data-season-choice="autumn" aria-pressed="false"><i></i>秋</button>
+        <button data-season-choice="winter" aria-pressed="false"><i></i>冬</button>
+      </div>
+      <div class="header-actions">
+        <span class="edition-label">花园 / 02</span>
+        <button class="icon-button" id="themeToggle" aria-label="切换夜间主题" title="切换日夜"><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#moon"></use></svg></button>
+        <button class="icon-button" id="helpToggle" aria-label="查看操作说明" title="操作说明"><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#circle-help"></use></svg></button>
+      </div>
+    </header>
+
+    <main id="main" class="garden-stage" tabindex="-1">
+      <section class="page cover is-active" id="home" aria-labelledby="homeTitle" data-page-name="花园封面">
+        <div class="cover-main">
+          <div class="cover-intro">
+            <span class="eyebrow"><span class="little-dot"></span> 一个允许想法自由生长的地方</span>
+            <h1 id="homeTitle">保持好奇，<br>随意<span class="bloom-word">生长<svg viewBox="0 0 260 24" aria-hidden="true"><path d="M3 17C72 0 163 2 253 9M47 23C114 12 192 12 245 17"/></svg></span>。</h1>
+            <span class="handwritten hero-hand">Let curiosity bloom.</span>
+            <p class="cover-description">欢迎来到我的花园</p>
+            <div class="cover-actions">
+              <button class="garden-button primary-button" id="enterGarden">随便逛逛<svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-up-right"></use></svg></button>
+              <a class="text-link" href="#projects">先看看作品<span>↗</span></a>
+            </div>
+            <p class="cover-postscript">不必赶路，好玩的东西会慢慢长出来。</p>
+          </div>
+          <div class="playground">
+            <div class="scene-topline"><span>THE GARDEN IS YOURS, TOO.</span><span id="seasonLabel">春日 · 万物冒头</span></div>
+            <div class="scene-wrap">
+              <div class="scene-orbit" aria-hidden="true"></div>
+              <span class="scene-sun" aria-hidden="true"><span>stay<br>curious</span></span>
+              <canvas id="flowerCanvas" width="1200" height="1100" role="img" aria-label="彩色互动花圃，轻点可种花。也可使用下方种一朵按钮。"></canvas>
+              <span class="scene-sticker" aria-hidden="true"><svg class="icon"><use href="./assets/icons.svg#mouse"></use></svg>轻点空地<br>种点好心情</span>
+              <span class="handwritten scene-caption">a little wild. a little wonderful.</span>
+            </div>
+            <div class="planting-toolbar">
+              <div><span class="plant-count" id="plantCount">00</span><span class="plant-label">朵花，由你种下</span></div>
+              <div class="plant-actions">
+                <button class="icon-button" id="resetFlowers" aria-label="清空我种的花" title="清空我种的花" disabled><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#rotate-ccw"></use></svg></button>
+                <button class="plant-button" id="plantFlower"><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#sprout"></use></svg>种一朵</button>
+              </div>
+            </div>
+            <span id="plantStatus" class="sr-only" role="status"></span>
+          </div>
+        </div>
+        <nav class="cover-directory" aria-label="封面花园目录">
+          <span class="directory-label">PICK A PATH <svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-right"></use></svg></span>
+          <a href="#about"><small>01</small>园丁档案<span>↗</span></a>
+          <a href="#journey"><small>02</small>成长小径<span>↗</span></a>
+          <a href="#projects"><small>03</small>项目温室<span>↗</span></a>
+          <a href="#contact"><small>04</small>花园信箱<span>↗</span></a>
+          <a href="#upcoming"><small>05</small>未完待续<span>↗</span></a>
+        </nav>
+      </section>
+
+      <section class="page inner-page" id="about" aria-labelledby="aboutTitle" data-page-name="园丁档案" inert hidden>
+        <div class="section-heading"><span class="eyebrow">01 / MEET THE GARDENER</span><h2 id="aboutTitle">一个爱折腾的人，<br><span>和一些小小的创造。</span></h2></div>
+        <div class="about-layout">
+          <div class="about-copy">
+            <p class="intro-line">你好，我是 <strong>董星</strong><span class="greeting-spark" aria-hidden="true"><svg class="icon"><use href="./assets/icons.svg#sprout"></use></svg></span></p>
+            <p class="profile-role">AI 产品经理</p>
+            <p class="profile-story">从经济学学习、行业研究，到产品实践与 AI 探索，在每一段经历中，保持好奇，积极学习。</p>
+            <a class="text-link" href="#journey">沿着成长小径走走<svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-right"></use></svg></a>
+          </div>
+          <aside class="manifesto-art" aria-label="保持好奇，动手创造，慢慢生长">
+            <div class="manifesto-word"><span>MAKE</span><span class="manifesto-middle">SMALL <i aria-hidden="true"><svg class="icon"><use href="./assets/icons.svg#sprout"></use></svg></i></span><span>WONDERS.</span></div>
+            <span class="handwritten manifesto-note">a work in progress.<br>just like me.</span>
+            <div class="manifesto-bottom"><span>好奇心常开</span><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#sprout"></use></svg><span>不急着定义自己</span></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="page inner-page" id="journey" aria-labelledby="journeyTitle" data-page-name="成长小径" inert hidden>
+        <div class="section-heading"><span class="eyebrow">02 / LEARNING & GROWING</span><h2 id="journeyTitle">走一点，<span>长一点。</span></h2></div>
+        <div class="growth-layout">
+          <aside class="education-garden" aria-labelledby="educationTitle">
+            <div class="growth-label"><h3 id="educationTitle">教育经历</h3><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#sprout"></use></svg></div>
+            <article class="education-item"><img class="school-logo" src="./assets/schools/beijing-normal-university.svg" alt="北京师范大学校徽" width="44" height="44"><span class="education-period">2024 — 2027</span><h4>北京师范大学</h4><p>经济与工商管理学院</p><span class="degree">经济学 · 硕士</span></article>
+            <article class="education-item"><img class="school-logo" src="./assets/schools/renmin-university-of-china.svg" alt="中国人民大学校徽" width="44" height="44"><span class="education-period">2020 — 2024</span><h4>中国人民大学</h4><p>劳动人事学院</p><span class="degree">经济学 · 学士</span></article>
+            <span class="handwritten growth-note">Always a little curious.</span>
+          </aside>
+          <div class="experience-garden" aria-labelledby="experienceTitle">
+            <div class="growth-label"><h3 id="experienceTitle">实习经历</h3><span>每一次实践，都算数。</span></div>
+            <ol class="experience-list">
+              <li><img class="company-logo" src="./assets/companies/bytedance-color.svg" alt="字节跳动 Logo" width="32" height="32"><span class="experience-date">2026.07 — 至今</span><div><h4>字节跳动<span>AI 产品经理</span></h4><p>企业 Agent 和团队数字员工的搭建与迭代</p></div></li>
+              <li><img class="company-logo" src="./assets/companies/iflytek.svg" alt="科大讯飞 Logo" width="32" height="32"><span class="experience-date">2026.03 — 2026.07</span><div><h4>科大讯飞<span>AI 产品经理</span></h4><p>多模态心脏超声智能报告系统的构建与迭代</p></div></li>
+              <li><img class="company-logo" src="./assets/companies/meituan.png" alt="美团 Logo" width="32" height="32"><span class="experience-date">2025.10 — 2026.01</span><div><h4>美团<span>产品运营</span></h4><p>供应链质量管理与产品优化</p></div></li>
+              <li><img class="company-logo" src="./assets/companies/drc-big-data-hd.png" alt="国研大数据研究院 Logo" width="32" height="32"><span class="experience-date">2025.06 — 2025.09</span><div><h4>国务院发展研究中心大数据研究院<span>产品经理</span></h4><p>大数据平台产品构建</p></div></li>
+              <li><img class="company-logo" src="./assets/companies/bosszhipin.png" alt="BOSS直聘 Logo" width="32" height="32"><span class="experience-date">2023.10 — 2024.01</span><div><h4>BOSS直聘<span>行业与产品研究</span></h4><p>行业研究与产品优化</p></div></li>
+              <li><img class="company-logo" src="./assets/companies/pacific-securities.png" alt="太平洋证券 Logo" width="32" height="32"><span class="experience-date">2023.03 — 2023.06</span><div><h4>太平洋证券研究所<span>行业研究</span></h4><p>行业数据分析与研究支持</p></div></li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="page inner-page project-page" id="projects" aria-labelledby="projectsTitle" data-page-name="项目温室，第 1 页" data-chapter="projects" inert hidden>
+        <div class="section-heading"><span class="eyebrow">03 / SELECTED CREATIONS</span><h2 id="projectsTitle">想法不大，<span>长势不错。</span></h2></div>
+        <div class="projects-layout">
+          <button class="project-card application-project" data-project="job-application-helper" aria-haspopup="dialog">
+            <span class="project-top"><span>01 / 浏览器扩展</span><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-up-right"></use></svg></span>
+            <span class="project-preview"><img src="./assets/projects/job-application-helper/profile-manager.png" alt="秋招网申助手的个人信息设置页面" width="1920" height="1563" loading="lazy"></span>
+            <span class="project-info"><span class="project-title">秋招网申助手</span><span class="project-description">把重复网申变成可核对、可追踪的智能填充流程。</span></span>
+          </button>
+          <button class="project-card interview-project" data-project="interview-review" aria-haspopup="dialog">
+            <span class="project-top"><span>02 / AI WEB 应用</span><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-up-right"></use></svg></span>
+            <span class="project-preview"><img src="./assets/projects/interview-review/analysis.png" alt="面试复盘助手的逐题分析界面" width="1920" height="1563" loading="lazy"></span>
+            <span class="project-info"><span class="project-title">面试复盘助手</span><span class="project-description">把面试录音转化为逐题诊断和跨面试改进线索。</span></span>
+          </button>
+          <button class="project-card resume-project" data-project="resume-builder" aria-haspopup="dialog">
+            <span class="project-top"><span>03 / 二次开发项目</span><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-up-right"></use></svg></span>
+            <span class="project-preview"><img src="./assets/projects/resume-builder/workspace.png" alt="智能简历编辑工具的编辑工作台" width="3976" height="2028" loading="lazy"></span>
+            <span class="project-info"><span class="project-title">智能简历编辑工具</span><span class="project-description">围绕写作、岗位对齐、模板排版和多格式导出优化简历工作流。</span></span>
+          </button>
+        </div>
+      </section>
+
+      <section class="page inner-page project-page" id="projects-more" aria-labelledby="projectsMoreTitle" data-page-name="项目温室，第 2 页" data-chapter="projects" inert hidden>
+        <div class="section-heading"><span class="eyebrow">03 / MORE TO EXPLORE</span><h2 id="projectsMoreTitle">还有一些，<span>新的可能。</span></h2></div>
+        <div class="projects-layout">
+          <button class="project-card meeting-project" data-project="meeting-minutes" aria-haspopup="dialog">
+            <span class="project-top"><span>04 / LLM 工作流</span><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-up-right"></use></svg></span>
+            <span class="project-preview"><img src="./assets/projects/meeting-minutes/input.png" alt="智能会议纪要工具的转写输入界面" width="1920" height="1563" loading="lazy"></span>
+            <span class="project-info"><span class="project-title">智能会议纪要工具</span><span class="project-description">用六阶段流程把会议转写整理为可复核的结构化纪要。</span></span>
+          </button>
+          <button class="project-card island-project" data-project="today-island" aria-haspopup="dialog">
+            <span class="project-top"><span>05 / 生活记录网站</span><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-up-right"></use></svg></span>
+            <span class="project-preview"><img src="./assets/projects/today-island/overview.png" alt="生活打卡网页的饮水记录与生活分类界面" width="2706" height="1764" loading="lazy"></span>
+            <span class="project-info"><span class="project-title">生活打卡网页</span><span class="project-description">把饮水、运动、饮食与心情记录集中到一座本地生活小岛。</span></span>
+          </button>
+          <button class="project-card vehicle-project" data-project="xiaomi-su7-3d" aria-haspopup="dialog">
+            <span class="project-top"><span>06 / 3D 交互网页</span><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-up-right"></use></svg></span>
+            <span class="project-preview"><img src="./assets/projects/xiaomi-su7-3d/vehicle-stage.png" alt="小米 SU7 3D 展示网页的车辆外观交互舞台" width="2586" height="1340" loading="lazy"></span>
+            <span class="project-info"><span class="project-title">小米 SU7 3D 展示网页</span><span class="project-description">基于Three.js呈现小米 SU7 的外观、座舱等 3D 展示效果</span></span>
+          </button>
+        </div>
+      </section>
+
+      <section class="page inner-page" id="contact" aria-labelledby="contactTitle" data-page-name="花园信箱" inert hidden>
+        <div class="section-heading"><span class="eyebrow">04 / GOOD THINGS START WITH A HELLO</span><h2 id="contactTitle">来都来了，<span>打个招呼。</span></h2><p>一个想法、一点建议，或者单纯聊聊最近在做的事。</p></div>
+        <div class="contact-layout">
+          <div class="mail-scene">
+            <span class="handwritten mail-top-note">Something nice, just for you.</span>
+            <button class="envelope" id="envelopeButton" aria-label="打开花园来信" aria-expanded="false"><span class="envelope-back"></span><span class="envelope-letter"><span class="letter-flower" aria-hidden="true"><svg class="icon"><use href="./assets/icons.svg#sprout"></use></svg></span><span class="handwritten">Hello, you.</span><span>很高兴，你来到这里。</span></span><span class="envelope-front"></span><span class="envelope-flap"></span><span class="envelope-seal"><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#heart"></use></svg></span></button>
+            <span class="envelope-hint">点开这封信，收下一点好心情。</span>
+          </div>
+          <div class="contact-details"><h3>我的门，随时为好奇心敞开。</h3><div id="contactLinks" class="contact-links"></div><p class="contact-note">世界很大，能在这里遇见，<br>本身就是件有意思的事。</p></div>
+        </div>
+        <p class="sample-note" id="contactSampleNote">欢迎来聊聊你的新想法。</p>
+      </section>
+
+      <section class="page inner-page upcoming-page" id="upcoming" aria-labelledby="upcomingTitle" data-page-name="未完待续" inert hidden>
+        <span class="eyebrow">05 / TO BE CONTINUED</span>
+        <div class="closing-art" aria-hidden="true"><span class="closing-petal p1"></span><span class="closing-petal p2"></span><span class="closing-petal p3"></span><span class="closing-petal p4"></span><span class="closing-center">∞</span></div>
+        <h2 id="upcomingTitle">未完，<span>待生长。</span></h2>
+        <p>有些想法还在发芽，有些故事还没写完。<br>留一点空白，给下一次灵光一闪。</p>
+        <a class="garden-button primary-button" href="#home">回去，再种一朵花<svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#rotate-ccw"></use></svg></a>
+        <span class="handwritten closing-note">Thanks for growing with me.</span>
+      </section>
+    </main>
+
+    <aside class="garden-index" id="gardenIndex" aria-label="花园目录" hidden>
+      <nav aria-label="内页花园目录">
+        <a href="#about"><span>01</span>园丁档案</a><a href="#journey"><span>02</span>成长小径</a><a href="#projects"><span>03</span>项目温室</a><a href="#contact"><span>04</span>花园信箱</a><a href="#upcoming"><span>05</span>未完待续</a>
+      </nav>
+    </aside>
+    <footer class="site-footer">
+      <span class="footer-note"><i></i> SMALL IDEAS. WILD POSSIBILITIES.</span>
+      <div class="scroll-hint"><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#mouse"></use></svg><span id="gestureHint">滚动鼠标，翻开下一页</span></div>
+      <nav class="page-controls" aria-label="翻页"><button class="page-arrow" id="previousPage" aria-label="上一页" disabled><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-left"></use></svg></button><span class="page-counter"><span id="pageNumber">00</span><span id="pageTotal">/ 05</span></span><button class="page-arrow" id="nextPage" aria-label="下一页"><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#arrow-right"></use></svg></button></nav>
+    </footer>
+    <div class="reading-progress" aria-hidden="true"><span id="readingProgress"></span></div>
+    <div class="toast" role="status" id="toast"></div>
+    <span class="sr-only" role="status" id="pageAnnouncer"></span>
+    <dialog id="detailDialog" class="garden-dialog"><button class="icon-button dialog-close" aria-label="关闭"><svg class="icon" aria-hidden="true"><use href="./assets/icons.svg#x"></use></svg></button><div id="dialogContent"></div></dialog>
+    <noscript><style>body{height:auto;overflow:auto}.garden-stage{position:relative;inset:auto}.page,.page[hidden]{position:relative;display:block;inset:auto;margin:0;padding:40px 24px;overflow:visible}.site-header,.site-footer{position:relative}.header-actions,.season-switch,.page-controls,.scroll-hint,.planting-toolbar,#enterGarden{display:none}.noscript-note{padding:24px}</style><div class="noscript-note">开启 JavaScript 可种花和互动。当前所有页面已展开，可以滚动阅读。</div></noscript>
+  </body>
+</html>
