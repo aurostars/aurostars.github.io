@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
+import "@fontsource-variable/source-serif-4";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://aurostars.github.io"),
-  title: "董星的个人主页",
-  description: "董星的个人主页，记录教育与实习经历，并展示独立项目与真实产品实践。",
+  title: "董星 | AI 产品与独立创造",
+  description: "董星的沉浸式个人主页，展示 AI 产品经历、独立项目与真实产品实践。",
   openGraph: {
-    title: "董星的个人主页",
-    description: "查看董星的教育、实习经历与个人项目。",
+    title: "董星 | AI 产品与独立创造",
+    description: "查看董星的 AI 产品经历、独立项目与沉浸式数字作品。",
     url: "https://aurostars.github.io",
-    siteName: "董星的个人主页",
+    siteName: "董星 | AI 产品与独立创造",
     locale: "zh_CN",
     type: "website",
     images: [

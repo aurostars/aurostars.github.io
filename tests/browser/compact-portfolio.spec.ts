@@ -2,7 +2,7 @@ import { expect, test, type Locator } from "@playwright/test";
 import sharp from "sharp";
 
 const viewports = [
-  { width: 1440, height: 900, columns: 3 },
+  { width: 1440, height: 900, columns: 2 },
   { width: 1024, height: 768, columns: 2 },
   { width: 768, height: 900, columns: 2 },
   { width: 767, height: 900, columns: 2 },
@@ -157,7 +157,7 @@ function rectanglesOverlap(
     && first.y + first.height > second.y + epsilon;
 }
 
-test("dark theme uses final rendered pixels for text and focus contrast", async ({ page }) => {
+test("light-locked theme uses final rendered pixels for text and focus contrast", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
   await page.goto("/", { waitUntil: "networkidle" });
 
@@ -168,8 +168,8 @@ test("dark theme uses final rendered pixels for text and focus contrast", async 
   await expectRenderedFocusIndicator(skipLink, "focused skip link");
 
   const textSamples = [
-    { locator: page.locator(".identity-bar-motion h1"), label: "identity heading" },
-    { locator: page.locator(".identity-bar-motion a").first(), label: "identity link" },
+    { locator: page.locator(".garden-hero-copy h1"), label: "identity heading" },
+    { locator: page.locator(".garden-hero-links a").first(), label: "identity link" },
     { locator: page.locator("#education-title"), label: "history heading" },
     { locator: page.locator(".profile-history-motion p").first(), label: "history text" },
     { locator: page.locator(".case-card-summary").first(), label: "project description" },
@@ -221,14 +221,15 @@ for (const viewport of [
   { width: 1440, height: 900 },
   { width: 1024, height: 768 },
 ]) {
-  test(`${viewport.width}px exposes the project heading in the first screen`, async ({ page }) => {
+  test(`${viewport.width}px presents the immersive identity in the first screen`, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto("/", { waitUntil: "networkidle" });
 
-    const headingBox = await page.getByRole("heading", { name: "个人项目" }).boundingBox();
+    const headingBox = await page.getByRole("heading", { name: "让智能产品，拥有可感知的体验。" }).boundingBox();
     expect(headingBox).not.toBeNull();
     expect(headingBox!.y).toBeGreaterThan(0);
     expect(headingBox!.y).toBeLessThan(viewport.height);
+    await expect(page.locator(".garden-scene")).toBeAttached();
   });
 }
 
@@ -301,11 +302,9 @@ for (const width of [768, 900]) {
       expect(roleBox).not.toBeNull();
       expect(periodBox).not.toBeNull();
       expect(contentBox).not.toBeNull();
-      expect(roleBox!.x).toBeGreaterThanOrEqual(organizationBox!.x + organizationBox!.width - 1);
-      expect(periodBox!.y).toBeGreaterThanOrEqual(Math.max(
-        organizationBox!.y + organizationBox!.height,
-        roleBox!.y + roleBox!.height,
-      ) - 1);
+      expect(Math.abs(roleBox!.x - organizationBox!.x)).toBeLessThanOrEqual(1);
+      expect(roleBox!.y).toBeGreaterThanOrEqual(organizationBox!.y + organizationBox!.height - 1);
+      expect(periodBox!.y).toBeGreaterThanOrEqual(roleBox!.y + roleBox!.height - 1);
       expect(contentBox!.y).toBeGreaterThanOrEqual(titleBox!.y + titleBox!.height - 1);
     }
   });
@@ -422,26 +421,24 @@ for (const viewport of viewports) {
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
     }
-    for (let rowStart = 0; rowStart < boxes.length; rowStart += viewport.columns) {
-      const row = boxes.slice(rowStart, rowStart + viewport.columns);
-      expect(Math.max(...row.map(({ y }) => y)) - Math.min(...row.map(({ y }) => y))).toBeLessThanOrEqual(1);
-      for (let index = 1; index < row.length; index += 1) {
-        expect(row[index].x).toBeGreaterThan(row[index - 1].x);
-      }
-    }
     for (let first = 0; first < boxes.length; first += 1) {
       for (let second = first + 1; second < boxes.length; second += 1) {
         expect(rectanglesOverlap(boxes[first], boxes[second]), `cards ${first + 1} and ${second + 1} overlap`).toBe(false);
       }
     }
-    expect(boxes[viewport.columns].y).toBeGreaterThan(boxes[0].y);
-
-    if (viewport.columns === 3) {
-      expect(Math.max(...boxes.slice(0, 3).map(({ y }) => y)) - Math.min(...boxes.slice(0, 3).map(({ y }) => y)))
-        .toBeLessThanOrEqual(1);
-      expect(Math.max(...boxes.slice(3).map(({ y }) => y)) - Math.min(...boxes.slice(3).map(({ y }) => y)))
-        .toBeLessThanOrEqual(1);
-      expect(boxes[3].y).toBeGreaterThan(boxes[0].y);
+    if (viewport.columns === 2) {
+      expect(boxes[1].x).toBeGreaterThan(boxes[0].x);
+      for (const index of [2, 4]) {
+        expect(Math.abs(boxes[index].x - boxes[0].x)).toBeLessThanOrEqual(1);
+      }
+      for (const index of [3, 5]) {
+        expect(Math.abs(boxes[index].x - boxes[1].x)).toBeLessThanOrEqual(1);
+      }
+    } else {
+      for (let index = 1; index < boxes.length; index += 1) {
+        expect(Math.abs(boxes[index].x - boxes[0].x)).toBeLessThanOrEqual(1);
+        expect(boxes[index].y).toBeGreaterThan(boxes[index - 1].y);
+      }
     }
   });
 }

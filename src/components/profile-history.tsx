@@ -1,5 +1,4 @@
 import { CompanyLogo } from "@/components/company-logo";
-import { Reveal } from "@/components/motion/reveal";
 import { SchoolLogo } from "@/components/school-logo";
 import type { EducationItem, ExperienceItem } from "@/content/portfolio";
 
@@ -15,7 +14,7 @@ export function ProfileHistory({ education, experiences }: ProfileHistoryProps) 
       id="experience"
       aria-labelledby="history-title"
     >
-      <Reveal className="profile-history-motion">
+      <div className="profile-history-motion">
         <h2 id="history-title" className="sr-only">教育与实习经历</h2>
         <section aria-labelledby="education-title">
           <h2 id="education-title">教育经历</h2>
@@ -55,7 +54,7 @@ export function ProfileHistory({ education, experiences }: ProfileHistoryProps) 
             ))}
           </ol>
         </section>
-      </Reveal>
+      </div>
     </section>
   );
 }

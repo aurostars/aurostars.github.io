@@ -68,9 +68,12 @@ test("all company logos load with intrinsic width and contain fit", async ({ pag
   ];
   for (const name of names) {
     const logo = page.getByRole("img", { name });
+    await logo.scrollIntoViewIfNeeded();
     await expect(logo).toBeVisible();
     await expect(logo).toHaveCSS("object-fit", "contain");
-    expect(await logo.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+    await expect.poll(
+      () => logo.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0),
+    ).toBe(true);
   }
 });
 
@@ -166,11 +169,11 @@ test("every project renders its selected images without loading failures and wit
   }
 });
 
-test("detail image frames use the approved 12px radius", async ({ page }) => {
+test("detail image frames use the approved 8px radius", async ({ page }) => {
   await page.goto("/?project=job-application-helper", { waitUntil: "networkidle" });
   const frames = page.locator(".case-detail figure");
   await expect(frames).toHaveCount(2);
   for (const frame of await frames.all()) {
-    await expect(frame).toHaveCSS("border-radius", "12px");
+    await expect(frame).toHaveCSS("border-radius", "8px");
   }
 });

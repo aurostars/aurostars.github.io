@@ -63,11 +63,11 @@ function renderLayout(children: React.ReactNode = <div id="content-probe">conten
 
 describe("site shell", () => {
   it("uses personal-homepage metadata without a removed career label", () => {
-    expect(metadata.title).toBe("董星的个人主页");
-    expect(metadata.description).toBe("董星的个人主页，记录教育与实习经历，并展示独立项目与真实产品实践。");
+    expect(metadata.title).toBe("董星 | AI 产品与独立创造");
+    expect(metadata.description).toBe("董星的沉浸式个人主页，展示 AI 产品经历、独立项目与真实产品实践。");
     expect(metadata.openGraph).toMatchObject({
-      title: "董星的个人主页",
-      description: "查看董星的教育、实习经历与个人项目。",
+      title: "董星 | AI 产品与独立创造",
+      description: "查看董星的 AI 产品经历、独立项目与沉浸式数字作品。",
     });
     expect(JSON.stringify(metadata)).not.toContain("AI 产品经理与独立开发者");
   });
@@ -83,6 +83,21 @@ describe("site shell", () => {
 });
 
 describe("home page", () => {
+  it("introduces the immersive portfolio and keeps every primary destination reachable", () => {
+    render(<Home />);
+    const hero = screen.getByRole("region", { name: "个人信息" });
+
+    expect(within(hero).getByRole("heading", { level: 1, name: "董星" })).toBeInTheDocument();
+    expect(within(hero).getByRole("heading", { level: 2, name: "让智能产品，拥有可感知的体验。" }))
+      .toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "打开菜单" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "关于" })).toHaveAttribute("id", "about");
+    expect(screen.getByRole("region", { name: "教育与实习经历" })).toHaveAttribute("id", "experience");
+    expect(screen.getByRole("region", { name: "个人项目" })).toHaveAttribute("id", "cases");
+    expect(screen.getByRole("region", { name: "联系" })).toHaveAttribute("id", "contact");
+    expect(screen.getAllByRole("button", { name: /查看项目详情：/ })).toHaveLength(6);
+  });
+
   it("renders only the name, email, and GitHub in the compact identity bar", () => {
     render(<Home />);
     const identity = screen.getByRole("region", { name: "个人信息" });

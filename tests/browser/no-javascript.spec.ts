@@ -13,7 +13,7 @@ test("server-rendered identity, history, and project content remain visible with
   await expect(page.getByRole("button", { name: "查看项目详情：秋招网申助手" })).toBeVisible();
 
   const hiddenCoreContent = await page.locator(
-    '.identity-bar-motion, .profile-history-motion, .section-heading, .case-card-motion',
+    '.garden-hero-copy, .profile-history-motion, .section-heading, .case-card-motion',
   ).evaluateAll((nodes) => nodes.filter((node) => {
     const style = getComputedStyle(node);
     const box = node.getBoundingClientRect();

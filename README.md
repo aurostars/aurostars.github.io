@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 董星的个人主页
 
-## Getting Started
+部署地址：<https://aurostars.github.io/>
 
-First, run the development server:
+这是一个静态导出的沉浸式个人作品集。页面使用原创 Three.js 植物浮雕、滚动镜头、全屏菜单和真实项目截图，内容包含教育经历、实习经历、六个个人项目及可深链的项目详情。
+
+## 本地运行
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 <http://localhost:3000/>。开发环境请使用 `localhost`，避免 Next.js 对其他 origin 的开发资源保护影响 HMR。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 质量检查
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test
+npm run lint
+npm run typecheck
+npm run build
+npm run test:browser:portfolio
+npm run test:browser:reduced
+npm run test:browser:no-js
+npm run test:browser:assets
+```
 
-## Learn More
+浏览器测试使用本机稳定版 Chrome。页面覆盖 Reduced Motion、无 JavaScript、图片失败、WebGL 失败、键盘焦点、原生 dialog、URL 深链和 320px 响应式布局。
 
-To learn more about Next.js, take a look at the following resources:
+## 内容
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 个人与项目事实位于 `src/content/portfolio.ts`。
+- 真实项目截图位于 `public/projects/`。
+- 公司和学校标识位于 `public/companies/` 与 `public/schools/`。
+- 三维场景位于 `src/components/immersive/garden-scene.tsx`。
+- 视觉系统记录在 `DESIGN.md`。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+三维花园为原创程序化几何，不包含参考网站的模型、品牌、文案或项目素材。WebGL 不可用时会显示 CSS 浮雕降级，页面内容和项目详情仍可使用。
 
-## Deploy on Vercel
+## 发布
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`main` 分支推送后，`.github/workflows/deploy.yml` 会执行测试、代码检查、类型检查和静态构建，然后将 `out/` 发布到 GitHub Pages。

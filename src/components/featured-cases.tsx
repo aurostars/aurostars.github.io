@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { CaseDialog } from "@/components/case-dialog";
-import { Reveal } from "@/components/motion/reveal";
 import { useProjectDialogState } from "@/components/use-project-dialog-state";
 import type { ProjectCase } from "@/content/portfolio";
 import { CaseSummaryCard } from "./case-summary-card";
@@ -20,13 +19,13 @@ export function FeaturedCases({ projects }: { projects: ProjectCase[] }) {
 
   return (
     <section className="cases-section site-container" id="cases" aria-labelledby="cases-title">
-      <Reveal className="section-heading compact-heading">
+      <div className="section-heading compact-heading">
         <h2 ref={headingRef} id="cases-title" tabIndex={-1}>个人项目</h2>
         <p id="cases-hint" className="cases-hint">点击卡片任意位置，可查看详情</p>
-      </Reveal>
+      </div>
       <div className="case-grid" aria-describedby="cases-hint" data-project-count={projects.length}>
         {projects.map((project, index) => (
-          <Reveal className="case-card-motion" delay={index * 0.04} key={project.slug}>
+          <div className="case-card-motion" key={project.slug}>
             <CaseSummaryCard
               project={project}
               priority={index < 3}
@@ -36,7 +35,7 @@ export function FeaturedCases({ projects }: { projects: ProjectCase[] }) {
               }}
               onOpen={() => handleOpen(project)}
             />
-          </Reveal>
+          </div>
         ))}
       </div>
       <CaseDialog

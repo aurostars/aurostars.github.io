@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-26T02:23:58Z",
+  "title": "Design System: Dong Xing Immersive Portfolio",
+  "extensions": {
+    "colorMeta": {
+      "plaster-paper": {
+        "role": "neutral",
+        "displayName": "Plaster Paper",
+        "canonical": "#e5e4df",
+        "tonalRamp": ["#262623", "#484843", "#6d6d67", "#969690", "#bdbdb7", "#d4d3ce", "#e5e4df", "#f4f3ee"]
+      },
+      "charcoal-ink": {
+        "role": "neutral",
+        "displayName": "Charcoal Ink",
+        "canonical": "#161713",
+        "tonalRamp": ["#161713", "#30312c", "#50514b", "#74756e", "#9b9c94", "#c2c3bb", "#dedfd8", "#f3f4ed"]
+      },
+      "botanical-accent": {
+        "role": "primary",
+        "displayName": "Botanical Mineral",
+        "canonical": "#547b68",
+        "tonalRamp": ["#12251c", "#244333", "#38614b", "#547b68", "#729987", "#94b6a5", "#bad3c6", "#e4eee8"]
+      },
+      "focus-green": {
+        "role": "primary",
+        "displayName": "Deep Focus Green",
+        "canonical": "#235f46",
+        "tonalRamp": ["#0a2117", "#123727", "#1a4c37", "#235f46", "#4b8068", "#78a38d", "#aac7b7", "#dfece4"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Sculptural Display",
+        "purpose": "Hero, manifesto, project index, and closing invitation."
+      },
+      "body": {
+        "displayName": "Product Body",
+        "purpose": "Career facts, project summaries, and long-form detail."
+      },
+      "label": {
+        "displayName": "Quiet Label",
+        "purpose": "Navigation, metadata, and section naming."
+      }
+    },
+    "shadows": [
+      {
+        "name": "project-lift",
+        "value": "0 1.5rem 3rem rgb(38 39 35 / 0.12)",
+        "purpose": "Separates real screenshots from the moving relief."
+      },
+      {
+        "name": "dialog-focus",
+        "value": "0 2rem 6rem rgb(20 21 18 / 0.28)",
+        "purpose": "Establishes the native project dialog as the focused layer."
+      }
+    ],
+    "motion": [
+      {
+        "name": "organic-ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Menu lines, link movement, and authored interface transitions."
+      },
+      {
+        "name": "garden-scroll",
+        "value": "Motion useScroll driving Three.js transforms outside React state",
+        "purpose": "Moves the camera and mineral scene through the portfolio story."
+      }
+    ],
+    "breakpoints": [
+      { "name": "compact", "value": "679px" },
+      { "name": "history-stack", "value": "767px" },
+      { "name": "wide", "value": "1080px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Menu Trigger",
+      "kind": "button",
+      "refersTo": "menu-trigger",
+      "description": "Fixed text control that opens the full-screen portfolio index.",
+      "html": "<button class=\"ds-menu\">菜单<span aria-hidden=\"true\">＝</span></button>",
+      "css": ".ds-menu{display:inline-flex;min-height:44px;align-items:center;gap:12px;border:0;background:transparent;color:#161713;font:600 16px Geist,system-ui,sans-serif;cursor:pointer}.ds-menu:hover{color:#547b68}.ds-menu:focus-visible{outline:3px solid #235f46;outline-offset:5px}"
+    },
+    {
+      "name": "Editorial Link",
+      "kind": "button",
+      "description": "Plain action link used for contact and navigation.",
+      "html": "<a class=\"ds-link\" href=\"#\">查看项目</a>",
+      "css": ".ds-link{color:#161713;border-bottom:1px solid currentColor;font:600 13px Geist,system-ui,sans-serif;text-decoration:none}.ds-link:hover{color:#547b68}.ds-link:focus-visible{outline:3px solid #235f46;outline-offset:5px}"
+    },
+    {
+      "name": "Project Card",
+      "kind": "card",
+      "refersTo": "project-media",
+      "description": "Unframed project trigger led by a real product screenshot.",
+      "html": "<button class=\"ds-project\"><span class=\"ds-project-media\"></span><strong>项目名称</strong><small>项目类型</small><p>一句真实、可核验的项目说明。</p></button>",
+      "css": ".ds-project{display:grid;width:360px;padding:0;border:0;background:transparent;color:#161713;text-align:left}.ds-project-media{display:block;aspect-ratio:4/3;border-radius:8px;background:#d5d5cf;box-shadow:0 24px 48px rgb(38 39 35/.12)}.ds-project strong{margin-top:16px;font:450 30px/1.1 'Source Serif 4 Variable',Georgia,serif}.ds-project small,.ds-project p{color:#343731;font:400 13px/1.65 Geist,system-ui,sans-serif}.ds-project:focus-visible{outline:3px solid #235f46;outline-offset:5px}"
+    },
+    {
+      "name": "Dialog Action",
+      "kind": "button",
+      "description": "Quiet bordered action for project source, live demo, and close.",
+      "html": "<button class=\"ds-dialog-action\">关闭</button>",
+      "css": ".ds-dialog-action{min-height:44px;padding:9px 13px;border:1px solid rgb(22 23 19/.18);border-radius:8px;background:transparent;color:#161713;font:600 12px Geist,system-ui,sans-serif}.ds-dialog-action:hover{background:#d4d8d0}.ds-dialog-action:focus-visible{outline:3px solid #235f46;outline-offset:5px}"
+    },
+    {
+      "name": "Full-Screen Menu Link",
+      "kind": "nav",
+      "description": "Oversized serif destination inside the opaque mineral menu.",
+      "html": "<a class=\"ds-menu-link\" href=\"#\">项目</a>",
+      "css": ".ds-menu-link{display:block;color:#161713;font:350 clamp(58px,8vw,128px)/.9 'Source Serif 4 Variable',Georgia,serif;letter-spacing:-.04em;text-decoration:none;transition:color .22s,transform .4s cubic-bezier(.16,1,.3,1)}.ds-menu-link:hover{color:#547b68;transform:translateX(6px)}.ds-menu-link:focus-visible{outline:3px solid #235f46;outline-offset:5px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Living Relief",
+    "overview": "The portfolio behaves like a pale sculptural garden that happens to contain a rigorous product record. It replaces conventional resume panels with one continuous spatial field, while verified screenshots and plain factual copy preserve credibility.",
+    "keyCharacteristics": [
+      "Full-viewport plaster garden generated from original Three.js geometry.",
+      "Editorial scale changes rather than repeated cards.",
+      "Real product screenshots remain the evidence layer.",
+      "Motion follows scroll, pointer, and UI state, with static fallbacks."
+    ],
+    "rules": [
+      {
+        "name": "The Material Continuity Rule",
+        "body": "Page, canvas, menu, and dialog stay in the same light mineral world.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Botanical Accent Rule",
+        "body": "Green is the only chromatic accent outside real logos and product screenshots.",
+        "section": "colors"
+      },
+      {
+        "name": "The Scale Instead of Decoration Rule",
+        "body": "Hierarchy comes from type scale and whitespace, not badges, gradients, or ornamental borders.",
+        "section": "typography"
+      },
+      {
+        "name": "The Canvas Carries Depth Rule",
+        "body": "Do not add glass panels or shadowed content containers to compensate for a weak scene.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do lead with the living relief and real project evidence.",
+      "Do keep text readable over the scene by reducing object opacity deeper in the page.",
+      "Do preserve 8px corners and one green accent.",
+      "Do keep every interaction keyboard accessible and usable without WebGL."
+    ],
+    "donts": [
+      "Don't copy reference-site models, identity, projects, or text.",
+      "Don't introduce dark sections, purple effects, glass-card grids, or rounded pills.",
+      "Don't add invented clients, metrics, roles, or project outcomes.",
+      "Don't place decorative labels over product screenshots."
+    ]
+  }
+}
